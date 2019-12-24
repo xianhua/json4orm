@@ -1,2 +1,2 @@
-# json-ql
-Support database ORM and SQL in JSON format (JSON-QL) and query execution engine by translating JSON-QL into SQL.
+# simple-graphql
+create graph-like query service to access data in relational database

@@ -1,0 +1,27 @@
+{
+  query: "Class",
+  filter: {
+    and: [
+	  {
+	     name: "Math"
+	  },
+	  {
+	    classTeachers.teacher.firstName: {
+	       in: ["John","Jack","Tom"]
+	    }
+	  }
+	]  
+  },
+  result: {
+    Class: {
+      properties: ["name"],
+      classTeachers: { 
+        teacher: ["firstName", "lastName","dateOfBirth"]
+      },
+      classStudents: {
+        properties: ["classStudentId", "score"],
+        student: ["firstName", "lastName","dateOfBirth"]
+      }
+    }  
+  }
+}
