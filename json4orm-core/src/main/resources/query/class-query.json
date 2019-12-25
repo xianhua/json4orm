@@ -8,7 +8,7 @@
 	  {
 	    classTeachers.teacher.firstName: {
 	       in: ["John","Jack","Tom"]
-	    }
+	    } 
 	  }
 	]  
   },

@@ -35,5 +35,9 @@ public class Result {
 	public void setAssociates(List<Result> associates) {
 		this.associates = associates;
 	}
+	
+	public void addAssociate(Result result) {
+	    associates.add(result);
+	}
 
 }

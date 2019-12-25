@@ -1,14 +1,14 @@
 package com.json4orm.model.query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Filter {
     private String property;
     private String operator;
-    private String value;
-    private List<String> values;
-    private List<Filter> filters;
-    
+    private Object value;
+    private List<Filter> filters = new ArrayList<>();
+
     public Filter() {
     }
 
@@ -28,20 +28,12 @@ public class Filter {
         this.operator = operator;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(Object value) {
         this.value = value;
-    }
-
-    public List<String> getValues() {
-        return values;
-    }
-
-    public void setValues(List<String> values) {
-        this.values = values;
     }
 
     public List<Filter> getFilters() {
@@ -50,6 +42,10 @@ public class Filter {
 
     public void setFilters(List<Filter> filters) {
         this.filters = filters;
+    }
+
+    public void addFilter(Filter filter) {
+        filters.add(filter);
     }
 
 }
