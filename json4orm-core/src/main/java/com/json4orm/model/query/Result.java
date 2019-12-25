@@ -1,6 +1,7 @@
 package com.json4orm.model.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Result {
@@ -13,7 +14,11 @@ public class Result {
     }
 
     public List<String> getProperties() {
-        return properties;
+        if(properties==null) {
+            return Collections.emptyList();
+        }
+        
+        return Collections.unmodifiableList(properties);
     }
 
     public void setProperties(List<String> properties) {

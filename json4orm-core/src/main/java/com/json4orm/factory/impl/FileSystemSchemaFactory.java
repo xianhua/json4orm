@@ -11,19 +11,24 @@ import com.json4orm.model.entity.Entity;
 import com.json4orm.model.entity.Schema;
 
 public class FileSystemSchemaFactory implements SchemaFactory {
-    private String entitiesFolder;
+    private File entitiesFolder;
     private static final ObjectMapper OBJ_MAPPER;
     static {
         OBJ_MAPPER = new ObjectMapper();
         OBJ_MAPPER.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     }
+
     public FileSystemSchemaFactory() {
     }
 
-    public FileSystemSchemaFactory(String entitiesFolder) {
+    public FileSystemSchemaFactory(final String entitiesFolder) {
+        super();
+        this.entitiesFolder = new File(entitiesFolder);
+    }
+
+    public FileSystemSchemaFactory(final File entitiesFolder) {
         super();
         this.entitiesFolder = entitiesFolder;
-        
     }
 
     @Override
@@ -31,16 +36,16 @@ public class FileSystemSchemaFactory implements SchemaFactory {
         if (entitiesFolder == null) {
             throw new Json4ormException("No folder specified for entities.");
         }
-       
-        Schema schema = new Schema();
-        File dir = new File(entitiesFolder);
-        File[] directoryListing = dir.listFiles();
+
+        final Schema schema = new Schema();
+
+        final File[] directoryListing = entitiesFolder.listFiles();
         if (directoryListing != null) {
-            for (File file : directoryListing) {
+            for (final File file : directoryListing) {
                 try {
-                    Entity entity = OBJ_MAPPER.readValue(file, Entity.class);
+                    final Entity entity = OBJ_MAPPER.readValue(file, Entity.class);
                     schema.addEntity(entity);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new Json4ormException("Failed to create schema.", e);
                 }
             }
@@ -50,13 +55,12 @@ public class FileSystemSchemaFactory implements SchemaFactory {
         return schema;
     }
 
-    public String getEntitiesFolder() {
+    public File getEntitiesFolder() {
         return entitiesFolder;
     }
 
-    public void setEntitiesFolder(String entitiesFolder) {
+    public void setEntitiesFolder(final File entitiesFolder) {
         this.entitiesFolder = entitiesFolder;
     }
 
-    
 }
