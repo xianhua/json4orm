@@ -12,7 +12,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.json4orm.engine.VisitingResult;
+import com.json4orm.engine.QueryContext;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.factory.impl.FileSystemSchemaFactory;
 import com.json4orm.model.entity.Schema;
@@ -40,11 +40,13 @@ public class QueryVisitorTest {
         final Schema schema = schemaFactory.createSchema();
 
         final QueryVisitor visitor = new QueryVisitor(schema);
-        final VisitingResult result = visitor.visit(q);
+        visitor.setConvertor(new ValueConvertorImpl());
+        final QueryContext result = visitor.visit(q);
 
         System.out.println(result.getSql());
-        for (final String key : result.getValues().keySet()) {
-            System.out.println(key + "=" + result.getValues().get(key));
+        int index = 1;
+        for (final Object v : result.getValues()) {
+            System.out.println((index++) + ": " + v.toString());
         }
     }
 }

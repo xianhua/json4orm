@@ -1,0 +1,26 @@
+{
+  name: "ClassStudent",
+  table: "class_student",
+  properties: [
+    {
+      name: "classStudentId",
+      type: "ID",
+      column: "class_student_id"
+    },
+    {
+      name: "class",
+      type: "Class",
+      column: "class_id"
+    },
+    {
+      name: "student",
+      type: "Student",
+      column: "student_id"
+    },
+    {
+      name: "score",
+      type: "number",
+      column: "score"
+    }
+  ]
+}

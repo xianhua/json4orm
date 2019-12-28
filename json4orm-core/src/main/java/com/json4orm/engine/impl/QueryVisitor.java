@@ -9,7 +9,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.json4orm.engine.VisitingResult;
+import com.json4orm.engine.QueryContext;
+import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.Visitor;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.entity.Entity;
@@ -22,19 +23,22 @@ import com.json4orm.model.query.Result;
 import com.json4orm.util.EngineUtil;
 
 public class QueryVisitor implements Visitor {
+    private Query query;
     private Schema schema;
     private String baseEntity;
+    private ValueConvertor convertor;
 
     Map<String, String> fromTables = new HashMap<>();
     List<String> joins = new ArrayList<>();
     Map<String, String> aliasMap = new HashMap<>();
 
     StringBuffer where = new StringBuffer();
-    List<String> select = new ArrayList<>();
+    List<String> selectedColumns = new ArrayList<>();
+    List<String> selectedProperties = new ArrayList<>();
     StringBuffer fromBuf = new StringBuffer();
 
     StringBuffer queryBuf = new StringBuffer();
-    Map<String, Object> values = new HashMap<>();
+    List<Object> values = new ArrayList<>();
     Set<String> entitySet = new HashSet<>();
 
     public QueryVisitor(final Schema schema) {
@@ -58,8 +62,17 @@ public class QueryVisitor implements Visitor {
         this.fromTables = fromTables;
     }
 
+    public ValueConvertor getConvertor() {
+        return convertor;
+    }
+
+    public void setConvertor(final ValueConvertor convertor) {
+        this.convertor = convertor;
+    }
+
     @Override
-    public VisitingResult visit(final Query query) throws Json4ormException {
+    public QueryContext visit(final Query query) throws Json4ormException {
+        this.query = query;
         baseEntity = query.getQueryFor();
         final String baseAlias = EngineUtil.getAlias(query.getQueryFor());
         aliasMap.put(baseEntity, baseAlias);
@@ -68,12 +81,12 @@ public class QueryVisitor implements Visitor {
         visit(query.getFilter(), FilterOperator.AND);
         visit(query.getResult(), "");
         createFrom();
-        return getVisitingResult();
+        return getQueryContext();
     }
 
-    public VisitingResult getVisitingResult() {
-        final VisitingResult visitResult = new VisitingResult();
-        String sql = "SELECT " + StringUtils.join(select, ",") + " FROM ";
+    public QueryContext getQueryContext() {
+        final QueryContext queryContext = new QueryContext();
+        String sql = "SELECT " + StringUtils.join(selectedColumns, ",") + " FROM ";
         boolean first = true;
         for (final String key : fromTables.keySet()) {
             if (!first) {
@@ -88,13 +101,16 @@ public class QueryVisitor implements Visitor {
         }
         sql += " WHERE " + where.toString();
 
-        visitResult.setSql(sql);
-        visitResult.setValues(values);
-        return visitResult;
+        queryContext.setSql(sql);
+        queryContext.setValues(values);
+        queryContext.setSelectedFields(selectedProperties);
+        queryContext.setQuery(query);
+        queryContext.setSchema(schema);
+        return queryContext;
     }
 
     private void visit(final Result result, final String entityChain) throws Json4ormException {
-        String entity = result.getEntity();
+        String entity = result.getPropertyName();
 
         if (entity == null) {
             entity = baseEntity;
@@ -104,10 +120,39 @@ public class QueryVisitor implements Visitor {
             }
         }
 
-        if (result.getProperties() != null && result.getProperties().size() > 0) {
-            final String alias = getOrCreateAlias(entity);
-            for (final String s : result.getProperties()) {
-                select.add(alias + "." + s);
+        final Entity entityObj = schema.findEntity(entity);
+        result.setEntity(entityObj);
+
+        final String alias = getOrCreateAlias(entity);
+        result.setAlias(alias);
+
+        for (final String s : result.getProperties()) {
+            final Property p = entityObj.getProperty(s);
+            selectedColumns.add(alias + "." + p.getColumn());
+            selectedProperties.add(alias + "." + p.getName());
+        }
+
+        // add PK if missing
+        final Property idProperty = entityObj.getIdProperty();
+        if (idProperty != null) {
+            if (StringUtils.isNotBlank(idProperty.getColumn())) {
+                final String idField = alias + "." + idProperty.getColumn();
+                if (!selectedColumns.contains(idField)) {
+                    selectedColumns.add(idField);
+                    final Property p = entityObj.getPropertyByColumn(idProperty.getColumn());
+                    selectedProperties.add(alias + "." + p.getName());
+                    result.addProperty(p.getName());
+                }
+            } else if (!EngineUtil.isEmpty(idProperty.getColumns())) {
+                for (final String idColumn : idProperty.getColumns()) {
+                    final String idField = alias + "." + idColumn;
+                    if (!selectedColumns.contains(idField)) {
+                        selectedColumns.add(idField);
+                        final Property p = entityObj.getPropertyByColumn(idColumn);
+                        selectedProperties.add(alias + "." + p.getName());
+                        result.addProperty(p.getName());
+                    }
+                }
             }
         }
 
@@ -152,79 +197,98 @@ public class QueryVisitor implements Visitor {
             final String entityChain = EngineUtil.getEntityChain(propertyChain);
             final String alias = getOrCreateAlias(entityChain);
             final String propertyName = EngineUtil.getLast(propertyChain);
-
-            final String placeHolder = EngineUtil.getPlaceHolder(propertyName);
-
+            final Entity entity = schema.findEntity(entityChain);
+            final Property property = entity.getProperty(propertyName);
+            final String column = property.getColumn();
             if (FilterOperator.EQUAL.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " = :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " = ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") = :" + placeHolder);
-                values.put(placeHolder, ((String) filter.getValue()).toLowerCase());
+                where.append("LOWER(" + alias + "." + column + ") = ?");
+                values.add(((String) filter.getValue()).toLowerCase());
             } else if (FilterOperator.NOT_EQUAL.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " != :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " != ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.NOT_EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") != :" + placeHolder);
-                values.put(placeHolder, ((String) filter.getValue()).toLowerCase());
+                where.append("LOWER(" + alias + "." + column + ") != ?");
+                values.add(((String) filter.getValue()).toLowerCase());
             } else if (FilterOperator.CONTAINS.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + filter.getValue() + "%");
+                where.append(alias + "." + column + " LIKE ?");
+                values.add("%" + filter.getValue() + "%");
             } else if (FilterOperator.CONTAINS_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + ((String) filter.getValue()).toLowerCase() + "%");
+                where.append("LOWER(" + alias + "." + column + ") LIKE ?");
+                values.add("%" + ((String) filter.getValue()).toLowerCase() + "%");
             } else if (FilterOperator.NOT_CONTAINS.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " NOT LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + filter.getValue() + "%");
+                where.append(alias + "." + column + " NOT LIKE ?");
+                values.add("%" + filter.getValue() + "%");
             } else if (FilterOperator.NOT_CONTAINS_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") NOT LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + ((String) filter.getValue()).toLowerCase() + "%");
+                where.append("LOWER(" + alias + "." + column + ") NOT LIKE ?");
+                values.add("%" + ((String) filter.getValue()).toLowerCase() + "%");
             } else if (FilterOperator.ENDS_WITH.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + filter.getValue());
+                where.append(alias + "." + column + " LIKE ?");
+                values.add("%" + filter.getValue());
             } else if (FilterOperator.ENDS_WITH_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + ((String) filter.getValue()).toLowerCase());
+                where.append("LOWER(" + alias + "." + column + ") LIKE ?");
+                values.add("%" + ((String) filter.getValue()).toLowerCase());
             } else if (FilterOperator.NOT_ENDS_WITH.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " NOT LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + filter.getValue());
+                where.append(alias + "." + column + " NOT LIKE ?");
+                values.add("%" + filter.getValue());
             } else if (FilterOperator.NOT_ENDS_WITH_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") NOT LIKE :" + placeHolder);
-                values.put(placeHolder, "%" + ((String) filter.getValue()).toLowerCase());
+                where.append("LOWER(" + alias + "." + column + ") NOT LIKE ?");
+                values.add("%" + ((String) filter.getValue()).toLowerCase());
             } else if (FilterOperator.STARTS_WITH.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " LIKE :" + placeHolder);
-                values.put(placeHolder, filter.getValue() + "%");
+                where.append(alias + "." + column + " LIKE ?");
+                values.add(filter.getValue() + "%");
             } else if (FilterOperator.STARTS_WITH_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") LIKE :" + placeHolder);
-                values.put(placeHolder, ((String) filter.getValue()).toLowerCase() + "%");
+                where.append("LOWER(" + alias + "." + column + ") LIKE ?");
+                values.add(((String) filter.getValue()).toLowerCase() + "%");
             } else if (FilterOperator.NOT_STARTS_WITH.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " NOT LIKE :" + placeHolder);
-                values.put(placeHolder, filter.getValue() + "%");
+                where.append(alias + "." + column + " NOT LIKE ?");
+                values.add(filter.getValue() + "%");
             } else if (FilterOperator.NOT_STARTS_WITH_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
-                where.append("LOWER(" + alias + "." + propertyName + ") NOT LIKE :" + placeHolder);
-                values.put(placeHolder, ((String) filter.getValue()).toLowerCase() + "%");
+                where.append("LOWER(" + alias + "." + column + ") NOT LIKE ?");
+                values.add(((String) filter.getValue()).toLowerCase() + "%");
             } else if (FilterOperator.GREATER_THAN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " > :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " > ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.LESS_THAN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " < :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " < ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.NOT_GREATER_THAN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " = <= :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " = <= ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.NOT_LESS_THAN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " >= :" + placeHolder);
-                values.put(placeHolder, filter.getValue());
+                where.append(alias + "." + column + " >= ?");
+                values.add(convertor.convert(property, filter.getValue()));
             } else if (FilterOperator.IN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " IN (:" + placeHolder + ")");
-                values.put(placeHolder, filter.getValue());
+                handleFilterWithListValues(where, values, alias, property, "IN", filter.getValue());
             } else if (FilterOperator.NOT_IN.equalsIgnoreCase(operator)) {
-                where.append(alias + "." + propertyName + " NOT IN (:" + placeHolder + ")");
-                values.put(placeHolder, filter.getValue());
+                handleFilterWithListValues(where, values, alias, property, "NOT IN", filter.getValue());
             } else {
                 throw new Json4ormException("Invalid operator: " + operator);
             }
         }
+    }
+
+    private void handleFilterWithListValues(final StringBuffer buf, final List<Object> values, final String alias,
+            final Property property, final String operator, final Object value) throws Json4ormException {
+        if (value == null || !(value instanceof List)) {
+            throw new Json4ormException("List of values is expected for operator: IN");
+        }
+
+        final List<?> list = (List<?>) value;
+        if (list.size() == 0) {
+            throw new Json4ormException("At least one value is expected in the list for operator: IN");
+        }
+        buf.append(alias + "." + property.getColumn() + " " + operator + "(?");
+        values.add(convertor.convert(property, list.get(0)));
+
+        for (int i = 1; i < list.size(); i++) {
+            buf.append(",?");
+            values.add(convertor.convert(property, list.get(i)));
+        }
+
+        buf.append(")");
     }
 
     private void createFrom() throws Json4ormException {

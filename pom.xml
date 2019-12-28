@@ -81,6 +81,7 @@
 	</dependencies>
 	<modules>
 		<module>json4orm-core</module>
+		<module>json4orm-db</module>
 	</modules>
 
 </project>
