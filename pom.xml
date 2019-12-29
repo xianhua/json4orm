@@ -82,6 +82,7 @@
 	<modules>
 		<module>json4orm-core</module>
 		<module>json4orm-db</module>
+		<module>json4orm-web</module>
 	</modules>
 
 </project>

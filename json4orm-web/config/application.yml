@@ -1,0 +1,11 @@
+logging:
+  level:
+    com.json4orm: DEBUG
+    org.springframework: INFO
+    org.springframework.web.servlet: DEBUG
+json4orm:
+  entity-folder: entities
+  jdbc-config:
+    db-url: jdbc:postgresql://localhost:5432/postgres
+    db-user: postgres
+    db-password: postgres

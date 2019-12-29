@@ -1,0 +1,33 @@
+{
+  name: "Class",
+  table: "class",
+  properties: [
+    {
+      name: "classId",
+      type: "ID",
+      column: "class_id"
+    },
+    {
+      name: "name",
+      type: "string",
+      column: "name"
+    },
+    {
+      name: "school",
+      type: "School",
+      column: "school_id"
+    },
+    {
+      name: "classStudents",
+      type: "list",
+      column: "class_id",
+      itemType: "ClassStudent"
+    },
+    {
+      name: "classTeachers",
+      type: "list",
+      column: "class_id",
+      itemType: "ClassTeacher"
+    }
+  ]
+}

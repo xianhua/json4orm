@@ -1,0 +1,26 @@
+{
+  name: "Schedule",
+  table: "schedule",
+  properties: [
+    {
+      name: "schedule_id",
+      type: "ID",
+      column: "schedule_id"
+    },
+    {
+      name: "classTeacher",
+      type: "ClassTeacher",
+      column: "class_teacher_id"
+    },
+    {
+      name: "dayOfWeek",
+      type: "string",
+      column: "day_of_week"
+    },
+    {
+      name: "timeOfDay",
+      type: "time",
+      column: "time_of_day"
+    }
+  ]
+}

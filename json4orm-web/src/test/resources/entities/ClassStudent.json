@@ -19,7 +19,7 @@
     },
     {
       name: "score",
-      type: "float",
+      type: "number",
       column: "score"
     }
   ]

@@ -1,0 +1,37 @@
+{
+  name: "Student",
+  table: "student",
+  properties: [
+    {
+      name: "studentId",
+      type: "ID",
+      column: "student_id"
+    },
+    {
+      name: "firstName",
+      type: "string",
+      column: "first_name"
+    },
+    {
+      name: "lastName",
+      type: "string",
+      column: "last_name"
+    },
+    {
+      name: "middleName",
+      type: "string",
+      column: "middle_name"
+    },
+    {
+      name: "birthDate",
+      type: "date",
+      column: "birth_date"
+    },
+    {
+      name: "classStudents",
+      type: "list",
+      itemType: "ClassStudent",
+      column: "student_id"
+    }
+  ]
+}
