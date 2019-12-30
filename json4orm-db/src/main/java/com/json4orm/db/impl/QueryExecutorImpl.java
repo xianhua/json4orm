@@ -5,10 +5,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.json4orm.db.QueryExecutor;
+import com.json4orm.db.QueryResult;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.impl.QueryVisitor;
@@ -16,8 +21,10 @@ import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Query;
+import com.json4orm.util.Constants;
 
 public class QueryExecutorImpl implements QueryExecutor {
+    private static final Logger LOG = LogManager.getLogger(QueryExecutorImpl.class);
     private String dbUrl;
     private String dbUser;
     private String dbPassword;
@@ -70,7 +77,8 @@ public class QueryExecutorImpl implements QueryExecutor {
     }
 
     @Override
-    public List<Map<String, Object>> execute(final Query query) throws Json4ormException {
+    public QueryResult execute(final Query query) throws Json4ormException {
+        final QueryResult result = new QueryResult();
         final QueryVisitor queryVisitor = new QueryVisitor(schema);
         queryVisitor.setConvertor(valueConvertor);
 
@@ -82,16 +90,57 @@ public class QueryExecutorImpl implements QueryExecutor {
         final RecordBuilderImpl recordBuilder = new RecordBuilderImpl();
         try {
             conn = getConnection();
-            ps = conn.prepareStatement(queryContext.getSql());
+            // get total count
+            LOG.debug("Executing count query: " + queryContext.getCountSql());
+            ps = conn.prepareStatement(queryContext.getCountSql());
             int index = 1;
             for (final Object value : queryContext.getValues()) {
                 ps.setObject(index++, value);
             }
+            ResultSet rs = ps.executeQuery();
+            long total = 0;
+            if (rs.next()) {
+                total = rs.getLong(1);
+            }
+            result.setTotal(total);
+            LOG.debug("Finished count query: " + total);
+            ps.close();
 
-            final ResultSet rs = ps.executeQuery();
-            return recordBuilder.buildRecord(rs, queryContext);
+            // get limit results
+            LOG.debug("Executing limit query: " + queryContext.getLimitSql());
+            final List<Long> ids = new ArrayList<>();
+            ps = conn.prepareStatement(queryContext.getLimitSql());
+            index = 1;
+            for (final Object value : queryContext.getValues()) {
+                ps.setObject(index++, value);
+            }
+
+            rs = ps.executeQuery();
+
+            while (rs.next()) {
+                ids.add(rs.getLong(1));
+            }
+            LOG.debug("Finished limit query: " + ids.toString());
+            ps.close();
+
+            if (!ids.isEmpty()) {
+                String sql = queryContext.getSql();
+                sql = sql.replace(Constants.LIMIT_IDS, StringUtils.join(ids, ","));
+                LOG.debug("Executing query: " + sql);
+                ps = conn.prepareStatement(sql);
+
+                index = 1;
+                for (final Object value : queryContext.getValues()) {
+                    ps.setObject(index++, value);
+                }
+
+                rs = ps.executeQuery();
+                result.setRecords(recordBuilder.buildRecord(rs, queryContext));
+            }
+            LOG.debug("Finished query.");
+            return result;
         } catch (final Exception e) {
-            throw new Json4ormException("Failed to execute query: " + queryContext.getSql(), e);
+            throw new Json4ormException(e);
         } finally {
             try {
                 if (ps != null) {

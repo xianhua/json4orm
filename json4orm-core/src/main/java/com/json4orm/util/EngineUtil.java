@@ -30,6 +30,11 @@ public class EngineUtil {
         return property + "_" + count;
     }
 
+    public static void resetAliasPlaceHolderCounts() {
+        ALIAS_COUNTS.clear();
+        PLACEHOLDER_COUNTS.clear();
+    }
+
     public static String getLast(final String propertyChain) {
         final int pos = propertyChain.lastIndexOf(".");
         if (pos == -1) {

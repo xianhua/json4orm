@@ -18,8 +18,11 @@ import com.json4orm.model.entity.Property;
 import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
+import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.query.Result;
+import com.json4orm.model.query.SortBy;
+import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 
 public class QueryVisitor implements Visitor {
@@ -31,13 +34,15 @@ public class QueryVisitor implements Visitor {
     Map<String, String> fromTables = new HashMap<>();
     List<String> joins = new ArrayList<>();
     Map<String, String> aliasMap = new HashMap<>();
-
-    StringBuffer where = new StringBuffer();
     List<String> selectedColumns = new ArrayList<>();
     List<String> selectedProperties = new ArrayList<>();
-    StringBuffer fromBuf = new StringBuffer();
 
+    StringBuffer where = new StringBuffer();
+    StringBuffer fromBuf = new StringBuffer();
     StringBuffer queryBuf = new StringBuffer();
+    StringBuffer limitBuf = new StringBuffer();
+    List<String> orderByList = new ArrayList<>();
+
     List<Object> values = new ArrayList<>();
     Set<String> entitySet = new HashSet<>();
 
@@ -72,6 +77,7 @@ public class QueryVisitor implements Visitor {
 
     @Override
     public QueryContext visit(final Query query) throws Json4ormException {
+        EngineUtil.resetAliasPlaceHolderCounts();
         this.query = query;
         baseEntity = query.getQueryFor();
         final String baseAlias = EngineUtil.getAlias(query.getQueryFor());
@@ -80,12 +86,50 @@ public class QueryVisitor implements Visitor {
         // visit filter
         visit(query.getFilter(), FilterOperator.AND);
         visit(query.getResult(), "");
+        visit(query.getPagination());
+        visit(query.getSortBy());
         createFrom();
         return getQueryContext();
     }
 
-    public QueryContext getQueryContext() {
+    private void visit(final List<SortBy> sortBy) throws Json4ormException {
+        if (sortBy == null) {
+            return;
+        }
+
+        for (final SortBy sb : sortBy) {
+            // check if property is for the baseEntity
+            final Entity entity = schema.getEntity(baseEntity);
+            final Property property = entity.getProperty(sb.getProperty());
+            if (property == null) {
+                throw new Json4ormException("SortBy field is not found for: " + baseEntity + "." + sb.getProperty());
+            }
+
+            final String alias = aliasMap.get(baseEntity);
+
+            orderByList.add(alias + "." + property.getColumn() + " " + sb.getOrder());
+        }
+
+    }
+
+    private void visit(final Pagination pagination) {
+
+    }
+
+    public QueryContext getQueryContext() throws Json4ormException {
         final QueryContext queryContext = new QueryContext();
+
+        queryContext.setSql(getQuery());
+        queryContext.setCountSql(getCountQuery());
+        queryContext.setLimitSql(getLimitQuery());
+        queryContext.setValues(values);
+        queryContext.setSelectedFields(selectedProperties);
+        queryContext.setQuery(query);
+        queryContext.setSchema(schema);
+        return queryContext;
+    }
+
+    private String getQuery() {
         String sql = "SELECT " + StringUtils.join(selectedColumns, ",") + " FROM ";
         boolean first = true;
         for (final String key : fromTables.keySet()) {
@@ -100,13 +144,81 @@ public class QueryVisitor implements Visitor {
             first = false;
         }
         sql += " WHERE " + where.toString();
+        if (query.getPagination() != null) {
+            final Entity entityBase = schema.getEntity(baseEntity);
+            final Property idProperty = entityBase.getIdProperty();
+            final String baseAlias = aliasMap.get(baseEntity);
+            sql += " AND " + baseAlias + "." + idProperty.getColumn() + " IN (" + Constants.LIMIT_IDS + ")";
+        }
+        if (!EngineUtil.isEmpty(orderByList)) {
+            sql += " ORDER BY " + StringUtils.join(orderByList, ",");
+        }
 
-        queryContext.setSql(sql);
-        queryContext.setValues(values);
-        queryContext.setSelectedFields(selectedProperties);
-        queryContext.setQuery(query);
-        queryContext.setSchema(schema);
-        return queryContext;
+        return sql;
+    }
+
+    private String getLimitQuery() {
+        final Entity entityBase = schema.getEntity(baseEntity);
+        final Property idProperty = entityBase.getIdProperty();
+        final String baseAlias = aliasMap.get(baseEntity);
+
+        String sql = "SELECT DISTINCT " + idProperty.getColumn() + " FROM ( ";
+        sql += "SELECT " + baseAlias + "." + idProperty.getColumn() + " FROM ";
+        boolean first = true;
+        for (final String key : fromTables.keySet()) {
+            if (!first) {
+                sql += ", ";
+            }
+
+            final Entity entity = schema.findEntity(key);
+            final String alias = fromTables.get(key);
+            sql += entity.getTable() + " " + alias;
+
+            first = false;
+        }
+        sql += " WHERE " + where.toString();
+
+        if (!EngineUtil.isEmpty(orderByList)) {
+            sql += " ORDER BY " + StringUtils.join(orderByList, ",");
+        }
+
+        sql += " ) AS temp ";
+        if (query.getPagination() != null) {
+            sql += " OFFSET " + query.getPagination().getOffset() + " LIMIT " + query.getPagination().getLimit();
+        }
+
+        return sql;
+    }
+
+    private String getCountQuery() throws Json4ormException {
+        final Entity entityBase = schema.getEntity(baseEntity);
+        final Property idProperty = entityBase.getIdProperty();
+        final String baseAlias = aliasMap.get(baseEntity);
+        String sql = "SELECT count(*) FROM (SELECT DISTINCT ";
+
+        if (idProperty.getColumn() != null) {
+            sql += baseAlias + "." + idProperty.getColumn();
+        } else {
+            throw new Json4ormException("No ID column(s) defined for: " + baseEntity + "." + idProperty.getName());
+        }
+
+        sql += " FROM ";
+        boolean first = true;
+        for (final String key : fromTables.keySet()) {
+            if (!first) {
+                sql += ", ";
+            }
+
+            final Entity entity = schema.findEntity(key);
+            final String alias = fromTables.get(key);
+            sql += entity.getTable() + " " + alias;
+
+            first = false;
+        }
+        sql += " WHERE " + where.toString();
+        sql += ") AS temp";
+
+        return sql;
     }
 
     private void visit(final Result result, final String entityChain) throws Json4ormException {
@@ -121,6 +233,9 @@ public class QueryVisitor implements Visitor {
         }
 
         final Entity entityObj = schema.findEntity(entity);
+        if (entityObj == null) {
+            throw new Json4ormException("No entity defined for: " + entity);
+        }
         result.setEntity(entityObj);
 
         final String alias = getOrCreateAlias(entity);
@@ -128,6 +243,9 @@ public class QueryVisitor implements Visitor {
 
         for (final String s : result.getProperties()) {
             final Property p = entityObj.getProperty(s);
+            if (p == null) {
+                throw new Json4ormException("No property defined for: " + entity + "." + s);
+            }
             selectedColumns.add(alias + "." + p.getColumn());
             selectedProperties.add(alias + "." + p.getName());
         }

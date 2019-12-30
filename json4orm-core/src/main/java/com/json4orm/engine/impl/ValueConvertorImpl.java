@@ -13,7 +13,9 @@ import com.json4orm.model.entity.Property;
 import com.json4orm.model.entity.PropertyType;
 
 public class ValueConvertorImpl implements ValueConvertor {
-    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATETIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
     @Override
     public Object convert(final Property property, final Object value) throws Json4ormException {
@@ -113,6 +115,16 @@ public class ValueConvertorImpl implements ValueConvertor {
             } else {
                 return convertToDate(value);
             }
+        } else if (PropertyType.PTY_DATETIME.equalsIgnoreCase(type)) {
+            if (value instanceof List) {
+                final List<Date> list = new ArrayList<>();
+                for (final Object o : ((List<?>) value)) {
+                    list.add(convertToDatetime(o));
+                }
+                return list;
+            } else {
+                return convertToDatetime(value);
+            }
         } else if (PropertyType.PTY_TIMESTAMP.equalsIgnoreCase(type)) {
             if (value instanceof List) {
                 final List<Timestamp> list = new ArrayList<>();
@@ -148,9 +160,18 @@ public class ValueConvertorImpl implements ValueConvertor {
 
     }
 
+    public java.sql.Date convertToDatetime(final Object value) throws Json4ormException {
+        try {
+            final java.util.Date date = DATETIME_FORMATTER.parse(value.toString());
+            return new java.sql.Date(date.getTime());
+        } catch (final ParseException e) {
+            throw new Json4ormException("Invalid date value: " + value.toString());
+        }
+    }
+
     public java.sql.Timestamp convertToTimestamp(final Object value) throws Json4ormException {
         try {
-            final java.util.Date date = DATE_FORMATTER.parse(value.toString());
+            final java.util.Date date = TIMESTAMP_FORMATTER.parse(value.toString());
             return new java.sql.Timestamp(date.getTime());
         } catch (final ParseException e) {
             throw new Json4ormException("Invalid date value: " + value.toString());

@@ -12,6 +12,8 @@ public class PropertyType {
 
     public static final String PTY_BOOLEAN = "boolean";
     public static final String PTY_DATE = "date";
+    public static final String PTY_TIME = "time";
+    public static final String PTY_DATETIME = "datetime";
     public static final String PTY_TIMESTAMP = "timestamp";
 
     public static final String PTY_LIST = "list";

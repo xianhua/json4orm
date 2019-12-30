@@ -7,6 +7,8 @@ import com.json4orm.model.query.Query;
 
 public class QueryContext {
     private String sql;
+    private String countSql;
+    private String limitSql;
     private List<Object> values;
     private List<String> selectedFields;
     private Query query;
@@ -18,6 +20,22 @@ public class QueryContext {
 
     public void setSql(final String sql) {
         this.sql = sql;
+    }
+
+    public String getCountSql() {
+        return countSql;
+    }
+
+    public void setCountSql(final String countSql) {
+        this.countSql = countSql;
+    }
+
+    public String getLimitSql() {
+        return limitSql;
+    }
+
+    public void setLimitSql(final String limitSql) {
+        this.limitSql = limitSql;
     }
 
     public List<Object> getValues() {
@@ -54,5 +72,9 @@ public class QueryContext {
 
     public void setSchema(final Schema schema) {
         this.schema = schema;
+    }
+
+    public void addValue(final Object value) {
+        values.add(value);
     }
 }

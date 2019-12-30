@@ -3,6 +3,7 @@ package com.json4orm.parser;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
+import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.query.Result;
+import com.json4orm.model.query.SortBy;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 
@@ -72,8 +75,77 @@ public class QueryParser {
         }
         query.setQueryFor(queryFor);
         query.setFilter(generateFilter(jsonMap.get(Constants.FILTER)));
+        query.setPagination(generatePagination(jsonMap.get(Constants.PAGINATION)));
+        query.setSortBy(generateSortBy(jsonMap.get(Constants.SORT_BY)));
         query.setResult(generateResult(jsonMap.get(Constants.RESULT), null));
         return query;
+    }
+
+    private List<SortBy> generateSortBy(final Object object) throws Json4ormException {
+        if (object == null) {
+            return null;
+        }
+
+        final List<SortBy> sortByList = new ArrayList<>();
+        if (object instanceof String) {
+            // order by single field ascending
+            final SortBy sortBy = createSortBy((String) object);
+            sortByList.add(sortBy);
+        } else if (object instanceof List) {
+            for (final Object o : (List<?>) object) {
+                if (o instanceof String) {
+                    final SortBy sortBy = createSortBy((String) o);
+                    sortByList.add(sortBy);
+                } else {
+                    throw new Json4ormException("Invalid sortBy: '" + o.toString() + "'");
+                }
+            }
+        }
+
+        return sortByList;
+    }
+
+    private SortBy createSortBy(final String str) throws Json4ormException {
+        final String[] parts = str.trim().split("\\s+");
+        if (parts.length == 0 || parts.length > 2) {
+            throw new Json4ormException("Invalid sortBy '" + str + "'");
+        }
+
+        final SortBy sortBy = new SortBy(parts[0]);
+        if (parts.length == 2) {
+            if (Constants.ORDER_ASC.equalsIgnoreCase(parts[1]) || Constants.ORDER_DESC.equalsIgnoreCase(parts[1])) {
+                sortBy.setOrder(parts[1]);
+            } else {
+                throw new Json4ormException("Invalid sortBy order '" + parts[1] + "'");
+            }
+        }
+
+        return sortBy;
+    }
+
+    private Pagination generatePagination(final Object object) throws Json4ormException {
+        final Pagination pagination = new Pagination();
+        if (object != null) {
+            if (!(object instanceof Map)) {
+                throw new Json4ormException("Invalid pagination specified.");
+            }
+
+            final Map<String, Object> map = (Map<String, Object>) object;
+            for (final Map.Entry<String, Object> entry : map.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(Constants.OFFSET)) {
+                    pagination.setOffset(Long.valueOf(entry.getValue().toString()));
+                } else if (entry.getKey().equalsIgnoreCase(Constants.LIMIT)) {
+                    pagination.setLimit(Integer.valueOf(entry.getValue().toString()));
+                } else if (entry.getKey().equalsIgnoreCase(Constants.TOTAL)) {
+                    pagination.setTotal(Long.valueOf(entry.getValue().toString()));
+                } else if (entry.getKey().equalsIgnoreCase(Constants.COUNT)) {
+                    pagination.setCount(Integer.valueOf(entry.getValue().toString()));
+                } else {
+                    throw new Json4ormException("Invalid pagination property: " + entry.getKey());
+                }
+            }
+        }
+        return pagination;
     }
 
     private Result generateResult(final Object object, final Result parent) throws Json4ormException {
@@ -147,7 +219,7 @@ public class QueryParser {
             }
         } else if (entry.getValue() instanceof String || entry.getValue() instanceof Number
                 || entry.getValue() instanceof Boolean) {
-            filter.setOperator(FilterOperator.EQUAL_CASE_INSENSITIVE);
+            filter.setOperator(FilterOperator.EQUAL);
             filter.setProperty(entry.getKey());
             filter.setValue(entry.getValue());
         } else if (entry.getValue() instanceof Map) {

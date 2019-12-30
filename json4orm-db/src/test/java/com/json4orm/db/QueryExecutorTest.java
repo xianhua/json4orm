@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
-import java.util.Map;
 
 import org.junit.Test;
 
@@ -32,7 +30,7 @@ public class QueryExecutorTest {
         final Schema schema = schemaFactory.createSchema();
         executor.setSchema(schema);
 
-        final InputStream in = this.getClass().getClassLoader().getResourceAsStream("query/class-query.json");
+        final InputStream in = this.getClass().getClassLoader().getResourceAsStream("query/student-query.json");
         final QueryParser parser = new QueryParser();
         final Query q;
         try {
@@ -41,10 +39,10 @@ public class QueryExecutorTest {
             in.close();
         }
 
-        final List<Map<String, Object>> records = executor.execute(q);
+        final QueryResult result = executor.execute(q);
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
-        System.out.println(mapper.writeValueAsString(records));
+        System.out.println(mapper.writeValueAsString(result.getRecords()));
     }
 }
