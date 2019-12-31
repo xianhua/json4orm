@@ -21,6 +21,11 @@
       name: "score",
       type: "float",
       column: "score"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
     }
   ]
 }

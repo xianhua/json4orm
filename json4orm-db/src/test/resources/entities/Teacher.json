@@ -28,6 +28,11 @@
       column: "birth_date"
     },
     {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    },
+    {
       name: "classTeachers",
       type: "list",
       itemType: "ClassTeacher",

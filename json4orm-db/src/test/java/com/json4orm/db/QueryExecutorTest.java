@@ -13,8 +13,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json4orm.db.impl.QueryExecutorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.factory.impl.FileSystemSchemaFactory;
-import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Query;
+import com.json4orm.model.schema.Schema;
 import com.json4orm.parser.QueryParser;
 
 public class QueryExecutorTest {

@@ -1,0 +1,50 @@
+package com.json4orm.model;
+
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.List;
+
+import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.json4orm.exception.Json4ormException;
+import com.json4orm.factory.impl.FileSystemSchemaFactory;
+import com.json4orm.model.schema.Schema;
+import com.json4orm.model.schema.SchemaValidator;
+
+public class SchemaValidatorTest {
+    @Test
+    public void testValidate()
+            throws JsonParseException, JsonMappingException, IOException, Json4ormException, URISyntaxException {
+        final URL url = this.getClass().getClassLoader().getResource("entities");
+        final File folder = new File(url.toURI());
+        final FileSystemSchemaFactory schemaFactory = new FileSystemSchemaFactory(folder);
+        final Schema schema = schemaFactory.createSchema();
+
+        final List<String> errors = SchemaValidator.validate(schema);
+        for (final String error : errors) {
+            System.out.println(error);
+        }
+        assertTrue(errors.isEmpty());
+    }
+    
+    @Test
+    public void testValidateWrongSchema()
+            throws JsonParseException, JsonMappingException, IOException, Json4ormException, URISyntaxException {
+        final URL url = this.getClass().getClassLoader().getResource("wrong_entities");
+        final File folder = new File(url.toURI());
+        final FileSystemSchemaFactory schemaFactory = new FileSystemSchemaFactory(folder);
+        final Schema schema = schemaFactory.createSchema();
+
+        final List<String> errors = SchemaValidator.validate(schema);
+        for (final String error : errors) {
+            System.out.println(error);
+        }
+        assertTrue(!errors.isEmpty());
+    }
+}

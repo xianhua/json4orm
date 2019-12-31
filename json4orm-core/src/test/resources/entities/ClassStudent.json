@@ -19,13 +19,13 @@
     },
     {
       name: "score",
-      type: "number",
+      type: "float",
       column: "score"
     },
     {
       name: "createdAt",
       type: "timestamp",
-      column" "created_at"
+      column: "created_at"
     }
   ]
 }

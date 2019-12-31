@@ -18,6 +18,11 @@
       column: "teacher_id"
     },
     {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    },
+    {
       name: "schedules",
       type: "list",
       column: "class_teacher_id",

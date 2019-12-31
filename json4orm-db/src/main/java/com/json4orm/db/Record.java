@@ -7,9 +7,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.json4orm.model.entity.Entity;
-import com.json4orm.model.entity.Property;
-import com.json4orm.model.entity.PropertyType;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.PropertyType;
 import com.json4orm.util.EngineUtil;
 
 public class Record {

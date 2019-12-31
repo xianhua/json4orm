@@ -10,8 +10,8 @@ import java.util.List;
 
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.entity.Property;
-import com.json4orm.model.entity.PropertyType;
+import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.PropertyType;
 
 public class ValueConvertorImpl implements ValueConvertor {
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
@@ -170,7 +170,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = DATE_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + DATE_FORMATTER +". For example: 2019-12-30", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd. For example: 2019-12-30", e);
         }
 
     }
@@ -180,7 +180,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = DATETIME_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + DATETIME_FORMATTER +". For example: 2019-12-30T23:42:13.056+1000.", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 
@@ -189,7 +189,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = TIMESTAMP_FORMATTER.parse(value.toString());
             return new java.sql.Timestamp(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + TIMESTAMP_FORMATTER +". For example: 2019-12-30T23:42:13.056+1000.", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 }

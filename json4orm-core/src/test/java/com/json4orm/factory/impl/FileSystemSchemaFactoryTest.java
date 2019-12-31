@@ -7,9 +7,9 @@ import java.net.URL;
 import org.junit.Test;
 
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.entity.Entity;
-import com.json4orm.model.entity.Property;
-import com.json4orm.model.entity.Schema;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.Schema;
 
 public class FileSystemSchemaFactoryTest {
 

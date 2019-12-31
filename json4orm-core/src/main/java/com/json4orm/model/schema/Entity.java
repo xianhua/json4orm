@@ -1,4 +1,4 @@
-package com.json4orm.model.entity;
+package com.json4orm.model.schema;
 
 import java.util.ArrayList;
 import java.util.List;

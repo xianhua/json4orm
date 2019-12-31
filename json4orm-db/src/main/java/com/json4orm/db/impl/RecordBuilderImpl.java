@@ -12,8 +12,8 @@ import com.json4orm.db.Record2JsonUtil;
 import com.json4orm.db.RecordBuilder;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.entity.Entity;
 import com.json4orm.model.query.Result;
+import com.json4orm.model.schema.Entity;
 
 public class RecordBuilderImpl implements RecordBuilder {
     private final List<Record> records = new ArrayList<>();

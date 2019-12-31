@@ -7,8 +7,8 @@ import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.factory.SchemaFactory;
-import com.json4orm.model.entity.Entity;
-import com.json4orm.model.entity.Schema;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Schema;
 
 public class FileSystemSchemaFactory implements SchemaFactory {
     private File entitiesFolder;

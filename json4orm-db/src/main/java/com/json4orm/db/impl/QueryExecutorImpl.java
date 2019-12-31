@@ -19,8 +19,8 @@ import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.impl.QueryVisitor;
 import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Query;
+import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 
 public class QueryExecutorImpl implements QueryExecutor {

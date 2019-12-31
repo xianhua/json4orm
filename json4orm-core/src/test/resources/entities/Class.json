@@ -15,7 +15,7 @@
     {
       name: "createdAt",
       type: "timestamp",
-      column" "created_at"
+      column: "created_at"
     },
     {
       name: "school",

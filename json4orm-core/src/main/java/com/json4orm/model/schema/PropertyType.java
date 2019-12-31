@@ -1,4 +1,4 @@
-package com.json4orm.model.entity;
+package com.json4orm.model.schema;
 
 public class PropertyType {
     public static final String PTY_ID = "id";
@@ -17,4 +17,16 @@ public class PropertyType {
     public static final String PTY_TIMESTAMP = "timestamp";
 
     public static final String PTY_LIST = "list";
+
+    public static final String[] PROPERTY_TYPES = { PTY_ID, PTY_STRING, PTY_BYTE, PTY_SHORT, PTY_INTEGER, PTY_LONG,
+            PTY_FLOAT, PTY_DOUBLE, PTY_BOOLEAN, PTY_DATE, PTY_TIME, PTY_DATETIME, PTY_TIMESTAMP, PTY_LIST };
+
+    public static boolean isTypeValid(final String type) {
+        for (final String t : PROPERTY_TYPES) {
+            if (t.equalsIgnoreCase(type)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

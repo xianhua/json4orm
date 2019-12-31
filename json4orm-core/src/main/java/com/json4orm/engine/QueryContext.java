@@ -2,8 +2,8 @@ package com.json4orm.engine;
 
 import java.util.List;
 
-import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Query;
+import com.json4orm.model.schema.Schema;
 
 public class QueryContext {
     private String sql;

@@ -1,0 +1,16 @@
+{
+  name: "",
+  table: "",
+  properties: [
+    {
+      name: "property_1",
+      type: "string",
+      column: "property_1"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    }
+  ]
+}

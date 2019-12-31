@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.json4orm.model.entity.Entity;
-import com.json4orm.model.entity.Property;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
 
 public class Result {
     private String propertyName;

@@ -13,15 +13,15 @@ import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.Visitor;
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.entity.Entity;
-import com.json4orm.model.entity.Property;
-import com.json4orm.model.entity.Schema;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
 import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.query.SortBy;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 

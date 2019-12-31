@@ -3,7 +3,7 @@
   table: "schedule",
   properties: [
     {
-      name: "schedule_id",
+      name: "scheduleId",
       type: "ID",
       column: "schedule_id"
     },
@@ -25,7 +25,7 @@
     {
       name: "createdAt",
       type: "timestamp",
-      column" "created_at"
+      column: "created_at"
     }
   ]
 }
