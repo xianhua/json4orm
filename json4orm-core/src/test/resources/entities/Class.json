@@ -13,6 +13,11 @@
       column: "name"
     },
     {
+      name: "createdAt",
+      type: "timestamp",
+      column" "created_at"
+    },
+    {
       name: "school",
       type: "School",
       column: "school_id"

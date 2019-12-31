@@ -21,6 +21,11 @@
       name: "timeOfDay",
       type: "time",
       column: "time_of_day"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column" "created_at"
     }
   ]
 }

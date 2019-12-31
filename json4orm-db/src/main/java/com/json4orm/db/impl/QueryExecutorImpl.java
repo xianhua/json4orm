@@ -128,12 +128,6 @@ public class QueryExecutorImpl implements QueryExecutor {
                 sql = sql.replace(Constants.LIMIT_IDS, StringUtils.join(ids, ","));
                 LOG.debug("Executing query: " + sql);
                 ps = conn.prepareStatement(sql);
-
-                index = 1;
-                for (final Object value : queryContext.getValues()) {
-                    ps.setObject(index++, value);
-                }
-
                 rs = ps.executeQuery();
                 result.setRecords(recordBuilder.buildRecord(rs, queryContext));
             }

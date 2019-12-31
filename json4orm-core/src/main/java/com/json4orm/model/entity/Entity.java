@@ -78,4 +78,16 @@ public class Entity {
 
         return results;
     }
+    
+    public List<Property> getOwnedPropeties(){
+        final List<Property> ownedProperties = new ArrayList<>();
+        for(final Property p: properties) {
+            if(!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+                ownedProperties.add(p);
+            }
+        }
+        
+        return ownedProperties;
+        
+    }
 }

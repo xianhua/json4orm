@@ -1,6 +1,7 @@
 package com.json4orm.engine.impl;
 
 import java.sql.Date;
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,8 +15,8 @@ import com.json4orm.model.entity.PropertyType;
 
 public class ValueConvertorImpl implements ValueConvertor {
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat DATETIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+    private static final SimpleDateFormat DATETIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 
     @Override
     public Object convert(final Property property, final Object value) throws Json4ormException {
@@ -145,9 +146,23 @@ public class ValueConvertorImpl implements ValueConvertor {
             } else {
                 return Integer.valueOf(value.toString());
             }
-        } else {
+        } else if (PropertyType.PTY_TIME.equalsIgnoreCase(type)) {
+            if (value instanceof List) {
+                final List<Time> list = new ArrayList<>();
+                for (final Object o : ((List<?>) value)) {
+                    list.add(convertToTime(o));
+                }
+                return list;
+            } else {
+                return convertToTime(value);
+            }
+        }else {
             throw new Json4ormException("Not supported property type: " + type);
         }
+    }
+
+    private Time convertToTime(final Object value) {
+        return Time.valueOf(value.toString());
     }
 
     public java.sql.Date convertToDate(final Object value) throws Json4ormException {
@@ -155,7 +170,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = DATE_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString());
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + DATE_FORMATTER +". For example: 2019-12-30", e);
         }
 
     }
@@ -165,7 +180,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = DATETIME_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString());
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + DATETIME_FORMATTER +". For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 
@@ -174,7 +189,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             final java.util.Date date = TIMESTAMP_FORMATTER.parse(value.toString());
             return new java.sql.Timestamp(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString());
+            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: " + TIMESTAMP_FORMATTER +". For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 }
