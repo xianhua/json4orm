@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 
 package com.json4orm.web;
 
@@ -21,25 +36,44 @@ import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
 import com.json4orm.parser.QueryParser;
 
+/**
+ * The Class Json4ormController contains functions to serve the query request
+ * and return query results. .
+ *
+ * @author Xianhua Liu
+ */
 @RestController
-public class QueryController {
-    private static final Logger LOG = LogManager.getLogger(QueryController.class);
+public class Json4ormController {
 
+    /** The Constant LOG. */
+    private static final Logger LOG = LogManager.getLogger(Json4ormController.class);
+
+    /** The query executor. */
     @Autowired
     private QueryExecutor queryExecutor;
 
+    /** The query parser. */
     @Autowired
     private QueryParser queryParser;
 
+    /**
+     * Inits the controller.
+     */
     @PostConstruct
     private void initController() {
 
     }
 
+    /**
+     * Execute.
+     *
+     * @param request the request
+     * @return the response entity
+     * @throws Json4ormException the json 4 orm exception
+     */
     @PostMapping(path = "/json4orm", consumes = "text/plain", produces = "application/json")
-    public ResponseEntity<QueryResponse<Map<String, Object>>> query(@RequestBody final String queryString)
-            throws Json4ormException {
-        final Query query = queryParser.parse(queryString);
+    public ResponseEntity<Response> execute(@RequestBody final String request) throws Json4ormException {
+        final Query query = queryParser.parse(request);
         LOG.debug("Query for: " + query.getQueryFor());
         final QueryResult result = queryExecutor.execute(query);
         final QueryResponse<Map<String, Object>> response = new QueryResponse<>();
@@ -49,6 +83,6 @@ public class QueryController {
         pagination.setCount(result.getRecords().size());
         pagination.setTotal(result.getTotal());
         response.setPagination(pagination);
-        return new ResponseEntity<QueryResponse<Map<String, Object>>>(response, HttpStatus.OK);
+        return new ResponseEntity<Response>(response, HttpStatus.OK);
     }
 }

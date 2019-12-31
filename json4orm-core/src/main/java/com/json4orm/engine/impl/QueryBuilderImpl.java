@@ -41,48 +41,48 @@ import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 
 /**
- * The Class QueryVisitor.
+ * The Class QueryBuilderImpl implements function to build QueryContext.
  *
  * @author Xianhua Liu
  */
 public class QueryBuilderImpl implements QueryBuilder {
-    
+
     /** The query. */
     private Query query;
-    
+
     /** The schema. */
     private Schema schema;
-    
+
     /** The base entity. */
     private String baseEntity;
-    
+
     /** The convertor. */
     private ValueConvertor convertor;
 
     /** The from tables for filter. */
     Map<String, String> fromTablesForFilter = new HashMap<>();
-    
+
     /** The from tables for result. */
     Map<String, String> fromTablesForResult = new HashMap<>();
 
     /** The joins. */
     List<String> joins = new ArrayList<>();
-    
+
     /** The alias map for filter. */
     Map<String, String> aliasMapForFilter = new HashMap<>();
-    
+
     /** The alias map for result. */
     Map<String, String> aliasMapForResult = new HashMap<>();
-    
+
     /** The selected columns. */
     List<String> selectedColumns = new ArrayList<>();
-    
+
     /** The selected properties. */
     List<String> selectedProperties = new ArrayList<>();
 
     /** The where for filter. */
     StringBuffer whereForFilter = new StringBuffer();
-    
+
     /** The where for result. */
     StringBuffer whereForResult = new StringBuffer();
 
@@ -91,7 +91,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     /** The values. */
     List<Object> values = new ArrayList<>();
-    
+
     /** The entity set. */
     Set<String> entitySet = new HashSet<>();
 
@@ -155,10 +155,10 @@ public class QueryBuilderImpl implements QueryBuilder {
         if (query.getResult() == null) {
             // set default result to full list of properties of the baseEntity
             final Result result = new Result();
-            final List<String> properties= new ArrayList<>();
+            final List<String> properties = new ArrayList<>();
             final Entity entity = schema.getEntity(baseEntity);
             final String alias = getOrCreateAlias(baseEntity, aliasMapForResult);
-            for(final Property p: entity.getOwnedPropeties()) {
+            for (final Property p : entity.getOwnedPropeties()) {
                 properties.add(p.getName());
             }
             result.setAlias(alias);
@@ -167,7 +167,7 @@ public class QueryBuilderImpl implements QueryBuilder {
             result.setPropertyName(baseEntity);
             query.setResult(result);
         }
-        
+
         visit(query.getResult(), "");
         visit(query.getPagination());
         visit(query.getSortBy());
@@ -258,7 +258,7 @@ public class QueryBuilderImpl implements QueryBuilder {
         if (query.getPagination() != null) {
             if (whereForResult.length() > 0) {
                 buf.append(" AND ");
-            }else {
+            } else {
                 buf.append(" WHERE ");
             }
             final Entity entityBase = schema.getEntity(baseEntity);
@@ -297,7 +297,7 @@ public class QueryBuilderImpl implements QueryBuilder {
         if (whereForFilter.length() > 0) {
             buf.append(" WHERE " + whereForFilter.toString());
         }
-        
+
         if (!EngineUtil.isEmpty(orderByList)) {
             buf.append(" ORDER BY " + StringUtils.join(orderByList, ","));
         }
@@ -347,7 +347,7 @@ public class QueryBuilderImpl implements QueryBuilder {
     /**
      * Visit.
      *
-     * @param result the result
+     * @param result      the result
      * @param entityChain the entity chain
      * @throws Json4ormException the json 4 orm exception
      */
@@ -435,7 +435,7 @@ public class QueryBuilderImpl implements QueryBuilder {
      * Visit.
      *
      * @param filter the filter
-     * @param logic the logic
+     * @param logic  the logic
      * @throws Json4ormException the json 4 orm exception
      */
     private void visit(final Filter filter, final String logic) throws Json4ormException {
@@ -540,12 +540,12 @@ public class QueryBuilderImpl implements QueryBuilder {
     /**
      * Handle filter with list values.
      *
-     * @param buf the buf
-     * @param values the values
-     * @param alias the alias
+     * @param buf      the buf
+     * @param values   the values
+     * @param alias    the alias
      * @param property the property
      * @param operator the operator
-     * @param value the value
+     * @param value    the value
      * @throws Json4ormException the json 4 orm exception
      */
     private void handleFilterWithListValues(final StringBuffer buf, final List<Object> values, final String alias,
@@ -573,8 +573,8 @@ public class QueryBuilderImpl implements QueryBuilder {
      * Creates the from.
      *
      * @param fromTables the from tables
-     * @param aliasMap the alias map
-     * @param where the where
+     * @param aliasMap   the alias map
+     * @param where      the where
      * @throws Json4ormException the json 4 orm exception
      */
     private void createFrom(final Map<String, String> fromTables, final Map<String, String> aliasMap,
@@ -611,11 +611,11 @@ public class QueryBuilderImpl implements QueryBuilder {
     /**
      * Creates the joins.
      *
-     * @param from the from
+     * @param from      the from
      * @param fromAlias the from alias
-     * @param to the to
-     * @param toAlias the to alias
-     * @param where the where
+     * @param to        the to
+     * @param toAlias   the to alias
+     * @param where     the where
      * @throws Json4ormException the json 4 orm exception
      */
     private void createJoins(final String from, final String fromAlias, final String to, final String toAlias,

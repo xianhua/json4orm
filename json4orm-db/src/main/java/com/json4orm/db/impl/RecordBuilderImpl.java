@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.db.impl;
 
 import java.sql.ResultSet;
@@ -15,13 +30,34 @@ import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.schema.Entity;
 
+/**
+ * The Class RecordBuilderImpl implements function to build record from data
+ * returned in ResultSet from database.
+ *
+ * @author Xianhua Liu
+ */
 public class RecordBuilderImpl implements RecordBuilder {
+
+    /** The records. */
     private final List<Record> records = new ArrayList<>();
 
+    /**
+     * Gets the records.
+     *
+     * @return the records
+     */
     public List<Record> getRecords() {
         return records;
     }
 
+    /**
+     * Builds the record.
+     *
+     * @param rs      the rs
+     * @param context the context
+     * @return the list
+     * @throws Json4ormException the json 4 orm exception
+     */
     @Override
     public List<Map<String, Object>> buildRecord(final ResultSet rs, final QueryContext context)
             throws Json4ormException {
@@ -40,6 +76,14 @@ public class RecordBuilderImpl implements RecordBuilder {
         return Record2JsonUtil.toJsonObject(getRecords());
     }
 
+    /**
+     * Builds the top level record.
+     *
+     * @param rs      the rs
+     * @param result  the result
+     * @param context the context
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void buildTopLevelRecord(final ResultSet rs, final Result result, final QueryContext context)
             throws Json4ormException {
         Record record = retrieveValues(rs, result, context);
@@ -55,6 +99,15 @@ public class RecordBuilderImpl implements RecordBuilder {
         }
     }
 
+    /**
+     * Builds the record.
+     *
+     * @param rs      the rs
+     * @param result  the result
+     * @param context the context
+     * @param parent  the parent
+     * @throws Json4ormException the json 4 orm exception
+     */
     public void buildRecord(final ResultSet rs, final Result result, final QueryContext context, final Record parent)
             throws Json4ormException {
         Record record = retrieveValues(rs, result, context);
@@ -70,6 +123,15 @@ public class RecordBuilderImpl implements RecordBuilder {
         }
     }
 
+    /**
+     * Retrieve values.
+     *
+     * @param rs      the rs
+     * @param result  the result
+     * @param context the context
+     * @return the record
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Record retrieveValues(final ResultSet rs, final Result result, final QueryContext context)
             throws Json4ormException {
 
@@ -97,6 +159,12 @@ public class RecordBuilderImpl implements RecordBuilder {
         return record;
     }
 
+    /**
+     * Find record.
+     *
+     * @param record the record
+     * @return the record
+     */
     private Record findRecord(final Record record) {
         for (final Record r : records) {
             if (r.equalTo(record)) {

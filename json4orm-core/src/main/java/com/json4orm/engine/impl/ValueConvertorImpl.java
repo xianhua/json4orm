@@ -29,18 +29,19 @@ import com.json4orm.model.schema.Property;
 import com.json4orm.model.schema.PropertyType;
 
 /**
- * The Class ValueConvertorImpl.
+ * The Class ValueConvertorImpl implements function to convert values to SQL
+ * types.
  *
  * @author Xianhua Liu
  */
 public class ValueConvertorImpl implements ValueConvertor {
-    
+
     /** The Constant DATE_FORMATTER. */
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
-    
+
     /** The Constant DATETIME_FORMATTER. */
     private static final SimpleDateFormat DATETIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
-    
+
     /** The Constant TIMESTAMP_FORMATTER. */
     private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 
@@ -48,7 +49,7 @@ public class ValueConvertorImpl implements ValueConvertor {
      * Convert.
      *
      * @param property the property
-     * @param value the value
+     * @param value    the value
      * @return the object
      * @throws Json4ormException the json 4 orm exception
      */
@@ -190,7 +191,7 @@ public class ValueConvertorImpl implements ValueConvertor {
             } else {
                 return convertToTime(value);
             }
-        }else {
+        } else {
             throw new Json4ormException("Not supported property type: " + type);
         }
     }
@@ -198,7 +199,7 @@ public class ValueConvertorImpl implements ValueConvertor {
     /**
      * Convert to time.
      *
-     * @param value the value
+     * @param value the value in format hh:mm:ss
      * @return the time
      */
     private Time convertToTime(final Object value) {
@@ -208,16 +209,18 @@ public class ValueConvertorImpl implements ValueConvertor {
     /**
      * Convert to date.
      *
-     * @param value the value
-     * @return the java.sql. date
-     * @throws Json4ormException the json 4 orm exception
+     * @param value the value in format: yyyy-MM-dd
+     * @return the object of java.sql.date
+     * @throws Json4ormException when the value is not in the required format:
+     *                           yyyy-MM-dd
      */
     public java.sql.Date convertToDate(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = DATE_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd. For example: 2019-12-30", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()
+                    + ". Expecting format: yyyy-MM-dd. For example: 2019-12-30", e);
         }
 
     }
@@ -225,32 +228,38 @@ public class ValueConvertorImpl implements ValueConvertor {
     /**
      * Convert to datetime.
      *
-     * @param value the value
-     * @return the java.sql. date
-     * @throws Json4ormException the json 4 orm exception
+     * @param value the value in format: yyyy-MM-dd'T'HH:mm:ss.SSSX, such as
+     *              2019-12-30T23:42:13.056+1000
+     * @return object of java.sql.date
+     * @throws Json4ormException the value is not in the required format:
+     *                           yyyy-MM-dd'T'HH:mm:ss.SSSX
      */
     public java.sql.Date convertToDatetime(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = DATETIME_FORMATTER.parse(value.toString());
             return new java.sql.Date(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()
+                    + ". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 
     /**
      * Convert to timestamp.
      *
-     * @param value the value
-     * @return the java.sql. timestamp
-     * @throws Json4ormException the json 4 orm exception
+     * @param value the value in format: yyyy-MM-dd'T'HH:mm:ss.SSSX, such as
+     *              2019-12-30T23:42:13.056+1000
+     * @return object of the java.sql.timestamp
+     * @throws Json4ormException the value is not in the required format:
+     *                           yyyy-MM-dd'T'HH:mm:ss.SSSX
      */
     public java.sql.Timestamp convertToTimestamp(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = TIMESTAMP_FORMATTER.parse(value.toString());
             return new java.sql.Timestamp(date.getTime());
         } catch (final ParseException e) {
-            throw new Json4ormException("Invalid date value: " + value.toString()+". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
+            throw new Json4ormException("Invalid date value: " + value.toString()
+                    + ". Expecting format: yyyy-MM-dd'T'HH:mm:ss.SSSX. For example: 2019-12-30T23:42:13.056+1000.", e);
         }
     }
 }

@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.parser;
 
 import java.io.File;
@@ -23,13 +38,28 @@ import com.json4orm.model.query.SortBy;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 
+/**
+ * The Class QueryParser offers functions to parse the query defined in
+ * simplified format into a normalized format.
+ *
+ * @author Xianhua Liu
+ */
 public class QueryParser {
+
+    /** The Constant OBJ_MAPPER. */
     private static final ObjectMapper OBJ_MAPPER;
     static {
         OBJ_MAPPER = new ObjectMapper();
         OBJ_MAPPER.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     }
 
+    /**
+     * Parses the.
+     *
+     * @param inputStream the input stream
+     * @return the query
+     * @throws Json4ormException the json 4 orm exception
+     */
     public Query parse(final InputStream inputStream) throws Json4ormException {
         Map<String, Object> jsonMap = null;
         try {
@@ -41,6 +71,13 @@ public class QueryParser {
         return parse(jsonMap);
     }
 
+    /**
+     * Parses the.
+     *
+     * @param queryFile the query file
+     * @return the query
+     * @throws Json4ormException the json 4 orm exception
+     */
     public Query parse(final File queryFile) throws Json4ormException {
         Map<String, Object> jsonMap = null;
         try {
@@ -53,6 +90,13 @@ public class QueryParser {
         return parse(jsonMap);
     }
 
+    /**
+     * Parses the.
+     *
+     * @param queryString the query string
+     * @return the query
+     * @throws Json4ormException the json 4 orm exception
+     */
     public Query parse(final String queryString) throws Json4ormException {
 
         Map<String, Object> jsonMap = null;
@@ -66,10 +110,17 @@ public class QueryParser {
 
     }
 
+    /**
+     * Parses the.
+     *
+     * @param jsonMap the json map
+     * @return the query
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Query parse(final Map<String, Object> jsonMap) throws Json4ormException {
         final Query query = new Query();
         // get query target
-        final String queryFor = (String) jsonMap.get(Constants.QUERY);
+        final String queryFor = (String) jsonMap.get(Constants.QUERY_FOR);
         if (StringUtils.isBlank(queryFor)) {
             throw new Json4ormException("No query specified.");
         }
@@ -81,6 +132,13 @@ public class QueryParser {
         return query;
     }
 
+    /**
+     * Generate sort by.
+     *
+     * @param object the object
+     * @return the list
+     * @throws Json4ormException the json 4 orm exception
+     */
     private List<SortBy> generateSortBy(final Object object) throws Json4ormException {
         if (object == null) {
             return null;
@@ -105,6 +163,13 @@ public class QueryParser {
         return sortByList;
     }
 
+    /**
+     * Creates the sort by.
+     *
+     * @param str the str
+     * @return the sort by
+     * @throws Json4ormException the json 4 orm exception
+     */
     private SortBy createSortBy(final String str) throws Json4ormException {
         final String[] parts = str.trim().split("\\s+");
         if (parts.length == 0 || parts.length > 2) {
@@ -123,6 +188,13 @@ public class QueryParser {
         return sortBy;
     }
 
+    /**
+     * Generate pagination.
+     *
+     * @param object the object
+     * @return the pagination
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Pagination generatePagination(final Object object) throws Json4ormException {
         final Pagination pagination = new Pagination();
         if (object != null) {
@@ -148,6 +220,14 @@ public class QueryParser {
         return pagination;
     }
 
+    /**
+     * Generate result.
+     *
+     * @param object the object
+     * @param parent the parent
+     * @return the result
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Result generateResult(final Object object, final Result parent) throws Json4ormException {
         if (object == null) {
             return null;
@@ -166,6 +246,13 @@ public class QueryParser {
         return result;
     }
 
+    /**
+     * Generate filter.
+     *
+     * @param object the object
+     * @return the filter
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Filter generateFilter(final Object object) throws Json4ormException {
         Filter filter = null;
         if (object == null) {
@@ -199,6 +286,14 @@ public class QueryParser {
         return filter;
     }
 
+    /**
+     * Generate filter.
+     *
+     * @param entry  the entry
+     * @param parent the parent
+     * @return the filter
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Filter generateFilter(final Map.Entry<String, Object> entry, final Filter parent) throws Json4ormException {
         final Filter filter = new Filter();
         if (entry.getValue() instanceof List) {
@@ -244,6 +339,14 @@ public class QueryParser {
         return filter;
     }
 
+    /**
+     * Generate result.
+     *
+     * @param entry  the entry
+     * @param parent the parent
+     * @return the result
+     * @throws Json4ormException the json 4 orm exception
+     */
     private Result generateResult(final Map.Entry<String, Object> entry, final Result parent) throws Json4ormException {
         Result result = new Result();
         if (Constants.PROPERTIES.equalsIgnoreCase(entry.getKey())) {

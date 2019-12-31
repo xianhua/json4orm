@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.model.schema;
 
 import java.util.ArrayList;
@@ -7,9 +22,23 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.json4orm.util.EngineUtil;
 
+/**
+ * The Class SchemaValidator validates a schema, including all entities and
+ * their properties.
+ *
+ * @author Xianhua Liu
+ */
 public class SchemaValidator {
+
+    /** The Constant PROPERTY_NAME_PATTERN. */
     public static final String PROPERTY_NAME_PATTERN = "^[a-zA-Z_][a-zA-Z_0-9]*$";
 
+    /**
+     * Validate.
+     *
+     * @param schema the schema
+     * @return the list
+     */
     public static List<String> validate(final Schema schema) {
 
         final List<String> errors = new ArrayList<>();
@@ -30,6 +59,13 @@ public class SchemaValidator {
 
     }
 
+    /**
+     * Validate.
+     *
+     * @param entity the entity
+     * @param schema the schema
+     * @return the list
+     */
     public static List<String> validate(final Entity entity, final Schema schema) {
         final List<String> errors = new ArrayList<>();
         if (entity == null) {
@@ -47,9 +83,9 @@ public class SchemaValidator {
         }
 
         if (StringUtils.isBlank(entity.getTable())) {
-            errors.add(entityName+ ": No table name defined for entity.");
+            errors.add(entityName + ": No table name defined for entity.");
         }
-        
+
         if (EngineUtil.isEmpty(entity.getProperties())) {
             errors.add(entityName + ": no property defined.");
             return errors;
@@ -73,6 +109,15 @@ public class SchemaValidator {
         return errors;
     }
 
+    /**
+     * Validate.
+     *
+     * @param property   the property
+     * @param index      the index
+     * @param entityName the entity name
+     * @param schema     the schema
+     * @return the list
+     */
     public static List<String> validate(final Property property, final int index, final String entityName,
             final Schema schema) {
         final List<String> errors = new ArrayList<>();
@@ -95,8 +140,8 @@ public class SchemaValidator {
             errors.add(entityName + "." + propertyName + ": No column defined.");
         }
 
-        if (PropertyType.PTY_ID.equalsIgnoreCase(property.getType())
-                && StringUtils.isBlank(property.getColumn()) && EngineUtil.isEmpty(property.getColumns())) {
+        if (PropertyType.PTY_ID.equalsIgnoreCase(property.getType()) && StringUtils.isBlank(property.getColumn())
+                && EngineUtil.isEmpty(property.getColumns())) {
             errors.add(entityName + "." + propertyName + ": No column or columns defined.");
         }
 
@@ -107,7 +152,7 @@ public class SchemaValidator {
                 errors.add(entityName + "." + propertyName + ": No entity found with name: " + property.getItemType());
             }
         }
-        
+
         return errors;
     }
 }

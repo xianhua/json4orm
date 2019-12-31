@@ -19,7 +19,8 @@ import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.schema.Property;
 
 /**
- * The Interface ValueConvertor.
+ * The Interface ValueConvertor defines function for converting data form
+ * request to corresponding SQL types based on the property type .
  */
 public interface ValueConvertor {
 

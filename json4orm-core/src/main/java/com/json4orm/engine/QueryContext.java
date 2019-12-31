@@ -21,37 +21,38 @@ import com.json4orm.model.query.Query;
 import com.json4orm.model.schema.Schema;
 
 /**
- * The Class QueryContext.
+ * The Class QueryContext contains contains all required objects supporting
+ * query execution.
  * 
  * @author Xianhua Liu
  */
 public class QueryContext {
-    
-    /** The sql. */
+
+    /** The sql string for querying records. */
     private String sql;
-    
-    /** The count sql. */
+
+    /** The sql string for querying total count. */
     private String countSql;
-    
-    /** The limit sql. */
+
+    /** The sql string for querying records within the range defined by offset and limit. */
     private String limitSql;
-    
-    /** The values. */
+
+    /** The values as querying statement parameters. */
     private List<Object> values;
-    
-    /** The selected fields. */
+
+    /** The selected fields for qury. */
     private List<String> selectedFields;
-    
-    /** The query. */
+
+    /** The query object as passed in from client. */
     private Query query;
-    
-    /** The schema. */
+
+    /** The schema contains all entities. */
     private Schema schema;
 
     /**
-     * Gets the sql.
+     * Gets the SQL string for querying data.
      *
-     * @return the sql
+     * @return the sql string for querying data
      */
     public String getSql() {
         return sql;
@@ -67,9 +68,9 @@ public class QueryContext {
     }
 
     /**
-     * Gets the count sql.
+     * Gets the count sql for querying total count of records.
      *
-     * @return the count sql
+     * @return the count sql string for querying total count of records.
      */
     public String getCountSql() {
         return countSql;
@@ -85,9 +86,9 @@ public class QueryContext {
     }
 
     /**
-     * Gets the limit sql.
+     * Gets the limit sql for querying records with limit and offset.
      *
-     * @return the limit sql
+     * @return the limit sql for querying records with limit and offset.
      */
     public String getLimitSql() {
         return limitSql;
@@ -103,27 +104,32 @@ public class QueryContext {
     }
 
     /**
-     * Gets the values.
+     * Gets the values used for querying parameters of PreparedStatement for count
+     * and limit queries.
      *
-     * @return the values
+     * @return the values used for querying parameters of PreparedStatement for
+     *         count and limit queries
      */
     public List<Object> getValues() {
         return values;
     }
 
     /**
-     * Sets the values.
+     * Sets the values used for querying parameters of PreparedStatement for count
+     * and limit queries.
      *
-     * @param values the new values
+     * @param values the new values used for querying parameters of
+     *               PreparedStatement for count and limit queries.
      */
     public void setValues(final List<Object> values) {
         this.values = values;
     }
 
     /**
-     * Gets the selected fields.
+     * Gets the selected fields for the query.
      *
-     * @return the selected fields
+     * @return the selected fields for the query. Each field contains table alias
+     *         and column name, like alias.column
      */
     public List<String> getSelectedFields() {
         return selectedFields;
@@ -139,10 +145,10 @@ public class QueryContext {
     }
 
     /**
-     * Gets the field index.
+     * Gets the field index in the selectedFields list.
      *
-     * @param field the field
-     * @return the field index
+     * @param field the field name
+     * @return the field index in the selectedFields list
      */
     public int getFieldIndex(final String field) {
         return selectedFields.indexOf(field) + 1;
@@ -151,7 +157,7 @@ public class QueryContext {
     /**
      * Gets the query.
      *
-     * @return the query
+     * @return the query object 
      */
     public Query getQuery() {
         return query;

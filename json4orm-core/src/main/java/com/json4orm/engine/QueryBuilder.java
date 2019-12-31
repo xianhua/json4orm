@@ -19,18 +19,19 @@ import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Query;
 
 /**
- * The Interface QueryBuilder.
+ * The Interface QueryBuilder defines functions for building query context.
  *
  * @author Xianhua Liu
  */
 public interface QueryBuilder {
-    
+
     /**
-     * Builds the.
+     * Builds the query context based on query object
      *
-     * @param query the query
-     * @return the query context
-     * @throws Json4ormException the json 4 orm exception
+     * @param query the query object
+     * @return the query context contains all required objects supporting query
+     *         execution
+     * @throws Json4ormException when the query is not in valid structure and format
      */
     public QueryContext build(Query query) throws Json4ormException;
 }
