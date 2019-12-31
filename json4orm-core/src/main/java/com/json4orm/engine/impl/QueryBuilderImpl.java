@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.engine.impl;
 
 import java.util.ArrayList;
@@ -9,9 +24,9 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.json4orm.engine.QueryBuilder;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
-import com.json4orm.engine.Visitor;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
@@ -25,52 +40,109 @@ import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
 
-public class QueryVisitor implements Visitor {
+/**
+ * The Class QueryVisitor.
+ *
+ * @author Xianhua Liu
+ */
+public class QueryBuilderImpl implements QueryBuilder {
+    
+    /** The query. */
     private Query query;
+    
+    /** The schema. */
     private Schema schema;
+    
+    /** The base entity. */
     private String baseEntity;
+    
+    /** The convertor. */
     private ValueConvertor convertor;
 
+    /** The from tables for filter. */
     Map<String, String> fromTablesForFilter = new HashMap<>();
+    
+    /** The from tables for result. */
     Map<String, String> fromTablesForResult = new HashMap<>();
 
+    /** The joins. */
     List<String> joins = new ArrayList<>();
+    
+    /** The alias map for filter. */
     Map<String, String> aliasMapForFilter = new HashMap<>();
+    
+    /** The alias map for result. */
     Map<String, String> aliasMapForResult = new HashMap<>();
+    
+    /** The selected columns. */
     List<String> selectedColumns = new ArrayList<>();
+    
+    /** The selected properties. */
     List<String> selectedProperties = new ArrayList<>();
 
+    /** The where for filter. */
     StringBuffer whereForFilter = new StringBuffer();
+    
+    /** The where for result. */
     StringBuffer whereForResult = new StringBuffer();
 
+    /** The order by list. */
     List<String> orderByList = new ArrayList<>();
 
+    /** The values. */
     List<Object> values = new ArrayList<>();
+    
+    /** The entity set. */
     Set<String> entitySet = new HashSet<>();
 
-    public QueryVisitor(final Schema schema) {
+    /**
+     * Instantiates a new query visitor.
+     *
+     * @param schema the schema
+     */
+    public QueryBuilderImpl(final Schema schema) {
         super();
         this.schema = schema;
     }
 
+    /**
+     * Gets the schema.
+     *
+     * @return the schema
+     */
     public Schema getSchema() {
         return schema;
     }
 
+    /**
+     * Sets the schema.
+     *
+     * @param schema the new schema
+     */
     public void setSchema(final Schema schema) {
         this.schema = schema;
     }
 
+    /**
+     * Gets the convertor.
+     *
+     * @return the convertor
+     */
     public ValueConvertor getConvertor() {
         return convertor;
     }
 
+    /**
+     * Sets the convertor.
+     *
+     * @param convertor the new convertor
+     */
     public void setConvertor(final ValueConvertor convertor) {
         this.convertor = convertor;
     }
 
     @Override
-    public QueryContext visit(final Query query) throws Json4ormException {
+    public QueryContext build(final Query query) throws Json4ormException {
         EngineUtil.resetAliasPlaceHolderCounts();
         this.query = query;
         baseEntity = query.getQueryFor();
@@ -105,6 +177,12 @@ public class QueryVisitor implements Visitor {
         return getQueryContext();
     }
 
+    /**
+     * Visit.
+     *
+     * @param sortBy the sort by
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void visit(final List<SortBy> sortBy) throws Json4ormException {
         if (sortBy == null) {
             return;
@@ -125,10 +203,21 @@ public class QueryVisitor implements Visitor {
 
     }
 
+    /**
+     * Visit.
+     *
+     * @param pagination the pagination
+     */
     private void visit(final Pagination pagination) {
 
     }
 
+    /**
+     * Gets the query context.
+     *
+     * @return the query context
+     * @throws Json4ormException the json 4 orm exception
+     */
     public QueryContext getQueryContext() throws Json4ormException {
         final QueryContext queryContext = new QueryContext();
 
@@ -142,6 +231,11 @@ public class QueryVisitor implements Visitor {
         return queryContext;
     }
 
+    /**
+     * Gets the query.
+     *
+     * @return the query
+     */
     private String getQuery() {
         final StringBuffer buf = new StringBuffer(100);
         buf.append("SELECT " + StringUtils.join(selectedColumns, ",") + " FROM ");
@@ -179,6 +273,11 @@ public class QueryVisitor implements Visitor {
         return buf.toString();
     }
 
+    /**
+     * Gets the limit query.
+     *
+     * @return the limit query
+     */
     private String getLimitQuery() {
         final String baseAlias = aliasMapForFilter.get(baseEntity);
         final StringBuffer buf = new StringBuffer(100);
@@ -210,6 +309,12 @@ public class QueryVisitor implements Visitor {
         return buf.toString();
     }
 
+    /**
+     * Gets the count query.
+     *
+     * @return the count query
+     * @throws Json4ormException the json 4 orm exception
+     */
     private String getCountQuery() throws Json4ormException {
         final Entity entityBase = schema.getEntity(baseEntity);
         final Property idProperty = entityBase.getIdProperty();
@@ -239,6 +344,13 @@ public class QueryVisitor implements Visitor {
         return buf.toString();
     }
 
+    /**
+     * Visit.
+     *
+     * @param result the result
+     * @param entityChain the entity chain
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void visit(final Result result, final String entityChain) throws Json4ormException {
         String entity = result.getPropertyName();
 
@@ -300,6 +412,14 @@ public class QueryVisitor implements Visitor {
 
     }
 
+    /**
+     * Gets the or create alias.
+     *
+     * @param property the property
+     * @param aliasMap the alias map
+     * @return the or create alias
+     * @throws Json4ormException the json 4 orm exception
+     */
     private String getOrCreateAlias(final String property, final Map<String, String> aliasMap)
             throws Json4ormException {
         if (aliasMap.containsKey(property)) {
@@ -311,6 +431,13 @@ public class QueryVisitor implements Visitor {
         return alias;
     }
 
+    /**
+     * Visit.
+     *
+     * @param filter the filter
+     * @param logic the logic
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void visit(final Filter filter, final String logic) throws Json4ormException {
         if (filter == null) {
             return;
@@ -410,6 +537,17 @@ public class QueryVisitor implements Visitor {
         }
     }
 
+    /**
+     * Handle filter with list values.
+     *
+     * @param buf the buf
+     * @param values the values
+     * @param alias the alias
+     * @param property the property
+     * @param operator the operator
+     * @param value the value
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void handleFilterWithListValues(final StringBuffer buf, final List<Object> values, final String alias,
             final Property property, final String operator, final Object value) throws Json4ormException {
         if (value == null || !(value instanceof List)) {
@@ -431,6 +569,14 @@ public class QueryVisitor implements Visitor {
         buf.append(")");
     }
 
+    /**
+     * Creates the from.
+     *
+     * @param fromTables the from tables
+     * @param aliasMap the alias map
+     * @param where the where
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void createFrom(final Map<String, String> fromTables, final Map<String, String> aliasMap,
             final StringBuffer where) throws Json4ormException {
 
@@ -462,6 +608,16 @@ public class QueryVisitor implements Visitor {
         }
     }
 
+    /**
+     * Creates the joins.
+     *
+     * @param from the from
+     * @param fromAlias the from alias
+     * @param to the to
+     * @param toAlias the to alias
+     * @param where the where
+     * @throws Json4ormException the json 4 orm exception
+     */
     private void createJoins(final String from, final String fromAlias, final String to, final String toAlias,
             final StringBuffer where) throws Json4ormException {
         final String key = from + " join " + to;

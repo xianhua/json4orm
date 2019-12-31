@@ -16,7 +16,7 @@ import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.QueryResult;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
-import com.json4orm.engine.impl.QueryVisitor;
+import com.json4orm.engine.impl.QueryBuilderImpl;
 import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Query;
@@ -79,12 +79,9 @@ public class QueryExecutorImpl implements QueryExecutor {
     @Override
     public QueryResult execute(final Query query) throws Json4ormException {
         final QueryResult result = new QueryResult();
-        final QueryVisitor queryVisitor = new QueryVisitor(schema);
-        queryVisitor.setConvertor(valueConvertor);
-
-        query.accept(queryVisitor);
-
-        final QueryContext queryContext = queryVisitor.getQueryContext();
+        final QueryBuilderImpl queryBuilder = new QueryBuilderImpl(schema);
+        queryBuilder.setConvertor(valueConvertor);
+        final QueryContext queryContext = queryBuilder.build(query);
         Connection conn = null;
         PreparedStatement ps = null;
         final RecordBuilderImpl recordBuilder = new RecordBuilderImpl();

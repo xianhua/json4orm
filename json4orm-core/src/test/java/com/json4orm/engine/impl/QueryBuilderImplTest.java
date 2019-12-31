@@ -19,9 +19,9 @@ import com.json4orm.model.query.Query;
 import com.json4orm.model.schema.Schema;
 import com.json4orm.parser.QueryParser;
 
-public class QueryVisitorTest {
+public class QueryBuilderImplTest {
     @Test
-    public void testQueryVisitor()
+    public void testBuild()
             throws JsonParseException, JsonMappingException, IOException, Json4ormException, URISyntaxException {
         final ObjectMapper mapper = new ObjectMapper();
         mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
@@ -39,9 +39,9 @@ public class QueryVisitorTest {
         final FileSystemSchemaFactory schemaFactory = new FileSystemSchemaFactory(folder);
         final Schema schema = schemaFactory.createSchema();
 
-        final QueryVisitor visitor = new QueryVisitor(schema);
-        visitor.setConvertor(new ValueConvertorImpl());
-        final QueryContext result = visitor.visit(q);
+        final QueryBuilderImpl builder = new QueryBuilderImpl(schema);
+        builder.setConvertor(new ValueConvertorImpl());
+        final QueryContext result = builder.build(q);
 
         System.out.println(result.getSql());
         int index = 1;

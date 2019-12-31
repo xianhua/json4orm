@@ -16,21 +16,21 @@
 package com.json4orm.engine;
 
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.schema.Property;
+import com.json4orm.model.query.Query;
 
 /**
- * The Interface ValueConvertor.
+ * The Interface QueryBuilder.
+ *
+ * @author Xianhua Liu
  */
-public interface ValueConvertor {
-
+public interface QueryBuilder {
+    
     /**
-     * Converts value for property based on the property type.
+     * Builds the.
      *
-     * @param property the property to convert value for
-     * @param value    the value
-     * @return the object converted value to the property
-     * @throws Json4ormException when the value is invalid or the type of the
-     *                           property is invalid
+     * @param query the query
+     * @return the query context
+     * @throws Json4ormException the json 4 orm exception
      */
-    Object convert(Property property, Object value) throws Json4ormException;
+    public QueryContext build(Query query) throws Json4ormException;
 }

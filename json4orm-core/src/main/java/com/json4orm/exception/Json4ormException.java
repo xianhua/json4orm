@@ -1,5 +1,25 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.exception;
 
+/**
+ * The Class Json4ormException.
+ *
+ * @author Xianhua Liu
+ */
 public class Json4ormException extends Exception {
 
     private static final long serialVersionUID = 1L;
@@ -7,19 +27,19 @@ public class Json4ormException extends Exception {
     public Json4ormException() {
     }
 
-    public Json4ormException(String message) {
+    public Json4ormException(final String message) {
         super(message);
     }
 
-    public Json4ormException(Throwable cause) {
+    public Json4ormException(final Throwable cause) {
         super(cause);
     }
 
-    public Json4ormException(String message, Throwable cause) {
+    public Json4ormException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public Json4ormException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public Json4ormException(final String message, final Throwable cause, final boolean enableSuppression, final boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 

@@ -1,3 +1,18 @@
+/**
+ * Copyright 2020 Xianhua Liu
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
 package com.json4orm.engine.impl;
 
 import java.sql.Date;
@@ -13,11 +28,30 @@ import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.schema.Property;
 import com.json4orm.model.schema.PropertyType;
 
+/**
+ * The Class ValueConvertorImpl.
+ *
+ * @author Xianhua Liu
+ */
 public class ValueConvertorImpl implements ValueConvertor {
+    
+    /** The Constant DATE_FORMATTER. */
     private static final SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd");
+    
+    /** The Constant DATETIME_FORMATTER. */
     private static final SimpleDateFormat DATETIME_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+    
+    /** The Constant TIMESTAMP_FORMATTER. */
     private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX");
 
+    /**
+     * Convert.
+     *
+     * @param property the property
+     * @param value the value
+     * @return the object
+     * @throws Json4ormException the json 4 orm exception
+     */
     @Override
     public Object convert(final Property property, final Object value) throws Json4ormException {
 
@@ -161,10 +195,23 @@ public class ValueConvertorImpl implements ValueConvertor {
         }
     }
 
+    /**
+     * Convert to time.
+     *
+     * @param value the value
+     * @return the time
+     */
     private Time convertToTime(final Object value) {
         return Time.valueOf(value.toString());
     }
 
+    /**
+     * Convert to date.
+     *
+     * @param value the value
+     * @return the java.sql. date
+     * @throws Json4ormException the json 4 orm exception
+     */
     public java.sql.Date convertToDate(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = DATE_FORMATTER.parse(value.toString());
@@ -175,6 +222,13 @@ public class ValueConvertorImpl implements ValueConvertor {
 
     }
 
+    /**
+     * Convert to datetime.
+     *
+     * @param value the value
+     * @return the java.sql. date
+     * @throws Json4ormException the json 4 orm exception
+     */
     public java.sql.Date convertToDatetime(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = DATETIME_FORMATTER.parse(value.toString());
@@ -184,6 +238,13 @@ public class ValueConvertorImpl implements ValueConvertor {
         }
     }
 
+    /**
+     * Convert to timestamp.
+     *
+     * @param value the value
+     * @return the java.sql. timestamp
+     * @throws Json4ormException the json 4 orm exception
+     */
     public java.sql.Timestamp convertToTimestamp(final Object value) throws Json4ormException {
         try {
             final java.util.Date date = TIMESTAMP_FORMATTER.parse(value.toString());

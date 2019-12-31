@@ -2,11 +2,7 @@ package com.json4orm.model.query;
 
 import java.util.List;
 
-import com.json4orm.engine.Visitable;
-import com.json4orm.engine.Visitor;
-import com.json4orm.exception.Json4ormException;
-
-public class Query implements Visitable {
+public class Query {
     private String queryFor;
     private Pagination pagination;
     private List<SortBy> sortBy;
@@ -54,10 +50,5 @@ public class Query implements Visitable {
 
     public void setSortBy(final List<SortBy> sortBy) {
         this.sortBy = sortBy;
-    }
-
-    @Override
-    public void accept(final Visitor visitor) throws Json4ormException {
-        visitor.visit(this);
     }
 }
