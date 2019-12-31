@@ -21,9 +21,9 @@ public class QueryExecutorTest {
     @Test
     public void testExecute() throws Json4ormException, URISyntaxException, IOException {
         final QueryExecutorImpl executor = new QueryExecutorImpl();
-        executor.setDbUser("postgres");
-        executor.setDbPassword("L*");
-        executor.setDbUrl("jdbc:postgresql://localhost:5432/postgres");
+        executor.setDbUser("");
+        executor.setDbPassword("");
+        executor.setDbUrl("jdbc:h2:mem:test;MODE=MySQL;DB_CLOSE_ON_EXIT=TRUE;TRACE_LEVEL_SYSTEM_OUT=1;INIT=runscript from 'src/test/resources/scripts/test.sql'");
         final URL url = this.getClass().getClassLoader().getResource("entities");
         final File folder = new File(url.toURI());
         final FileSystemSchemaFactory schemaFactory = new FileSystemSchemaFactory(folder);
