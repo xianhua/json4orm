@@ -10,3 +10,5 @@ json4orm:
     db-url: jdbc:postgresql://localhost:5432/postgres
     db-user: postgres
     db-password: postgres
+  allowedOrigins:
+    - *

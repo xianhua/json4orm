@@ -17,6 +17,8 @@
 package com.json4orm.web.config;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,9 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.impl.QueryExecutorImpl;
@@ -42,15 +47,18 @@ import com.json4orm.parser.QueryParser;
  * 
  * <P>
  * The json4orm configuration can be updated in the application.yml file in the
- * config folder under the same folder where the application jar is deployed.</P>
+ * config folder under the same folder where the application jar is deployed.
+ * </P>
  * 
- * <P>Here is an example.</P>
- *  json4orm:<br/>
- *    entity-folder: entities<br/>
- *      jdbc-config:<br/>
- *        db-url: jdbc:postgresql://localhost:5432/postgres<br/>
- *        db-user: postgres<br/>
- *        db-password: postgres<br/>
+ * <P>
+ * Here is an example.
+ * </P>
+ * json4orm:<br/>
+ * entity-folder: entities<br/>
+ * jdbc-config:<br/>
+ * db-url: jdbc:postgresql://localhost:5432/postgres<br/>
+ * db-user: postgres<br/>
+ * db-password: postgres<br/>
  * 
  * @author Xianhua Liu
  */
@@ -66,6 +74,8 @@ public class Json4ormConfiguration {
 
     /** The jdbc config. */
     private JdbcConfig jdbcConfig;
+
+    List<String> allowedOrigins = new ArrayList<>();
 
     /**
      * Gets the entity folder.
@@ -101,6 +111,14 @@ public class Json4ormConfiguration {
      */
     public void setJdbcConfig(final JdbcConfig jdbcConfig) {
         this.jdbcConfig = jdbcConfig;
+    }
+
+    public List<String> getAllowedOrigins() {
+        return allowedOrigins;
+    }
+
+    public void setAllowedOrigins(final List<String> allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
     }
 
     /**
@@ -150,5 +168,22 @@ public class Json4ormConfiguration {
     @Bean
     public QueryParser queryParser() {
         return new QueryParser();
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        final CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+        config.addAllowedHeader("*");
+        if (allowedOrigins == null || allowedOrigins.isEmpty()) {
+            config.setAllowedOrigins(Arrays.asList("*"));
+        } else {
+            config.setAllowedOrigins(this.allowedOrigins);
+        }
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "OPTIONS", "DELETE", "HEAD", "PATCH"));
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }
