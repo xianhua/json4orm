@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<artifactId>json4orm-web</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<parent>
@@ -16,12 +16,12 @@
 		<dependency>
 			<groupId>com.json4orm</groupId>
 			<artifactId>json4orm-core</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.json4orm</groupId>
 			<artifactId>json4orm-db</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -54,8 +54,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-  <scm>
-    <tag>json4orm-parent-1.0.0</tag>
-  </scm>
 </project>
