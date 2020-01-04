@@ -59,7 +59,8 @@ public class Json4ormController {
      *
      * @param request the request in simplified format
      * @return the response entity
-     * @throws Json4ormException
+     * @throws Json4ormException when query is invalid or failure occurs during
+     *                           database query
      */
     @PostMapping(path = "/json4orm/simplified", consumes = "text/plain", produces = "application/json")
     public ResponseEntity<Response> executeSimplified(@RequestBody final String request) throws Json4ormException {
@@ -67,13 +68,13 @@ public class Json4ormController {
         return executeQuery(query);
     }
 
-
     /**
      * Execute query with normalized format.
      *
      * @param query the query in normalized format
      * @return the response entity
-     * @throws Json4ormException
+     * @throws Json4ormException when query is invalid or failure occurs during
+     *                           database query
      */
     @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Response> executeNormalized(@RequestBody final Query query) throws Json4ormException {

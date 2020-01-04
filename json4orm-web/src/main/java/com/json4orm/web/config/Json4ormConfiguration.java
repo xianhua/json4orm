@@ -53,15 +53,10 @@ import com.json4orm.parser.QueryParser;
  * <P>
  * Here is an example.
  * </P>
- * json4orm:
- *   entity-folder: entities
- *   jdbc-config:
- *     db-url: jdbc:postgresql://localhost:5432/postgres
- *     db-user: postgres
- *     db-password: postgres
- *   allowed-origins:
- *     - http://localhost:8080
- *     
+ * json4orm: entity-folder: entities jdbc-config: db-url:
+ * jdbc:postgresql://localhost:5432/postgres db-user: postgres db-password:
+ * postgres allowed-origins: - http://localhost:8080
+ * 
  * @author Xianhua Liu
  */
 @Configuration
@@ -127,7 +122,8 @@ public class Json4ormConfiguration {
      * Query executor.
      *
      * @return the query executor
-     * @throws Json4ormException the json 4 orm exception
+     * @throws Json4ormException when schema is invalid or required configurations
+     *                           are missing including dbUser, dbPassword and dbUrl.
      */
     @Bean
     public QueryExecutor queryExecutor() throws Json4ormException {
