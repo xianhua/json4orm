@@ -44,7 +44,7 @@ public class QueryParserTest {
     }
 
     private void printResult(final Result r) {
-        System.out.println(r.getPropertyName());
+        System.out.println(r.getEntity());
 
         for (final String p : r.getProperties()) {
             System.out.println("\t" + p);

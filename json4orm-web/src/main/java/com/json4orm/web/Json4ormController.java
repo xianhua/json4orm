@@ -71,9 +71,25 @@ public class Json4ormController {
      * @return the response entity
      * @throws Json4ormException the json 4 orm exception
      */
-    @PostMapping(path = "/json4orm", consumes = "text/plain", produces = "application/json")
-    public ResponseEntity<Response> execute(@RequestBody final String request) throws Json4ormException {
+    @PostMapping(path = "/json4orm/simplified", consumes = "text/plain", produces = "application/json")
+    public ResponseEntity<Response> executeSimplified(@RequestBody final String request) throws Json4ormException {
         final Query query = queryParser.parse(request);
+        return executeQuery(query);
+    }
+
+    /**
+     * Execute.
+     *
+     * @param request the request
+     * @return the response entity
+     * @throws Json4ormException the json 4 orm exception
+     */
+    @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<Response> executeNomalized(@RequestBody final Query query) throws Json4ormException {
+        return executeQuery(query);
+    }
+
+    private ResponseEntity<Response> executeQuery(final Query query) throws Json4ormException {
         LOG.debug("Query for: " + query.getQueryFor());
         final QueryResult result = queryExecutor.execute(query);
         final QueryResponse<Map<String, Object>> response = new QueryResponse<>();

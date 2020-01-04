@@ -162,9 +162,9 @@ public class QueryBuilderImpl implements QueryBuilder {
                 properties.add(p.getName());
             }
             result.setAlias(alias);
-            result.setEntity(entity);
+            result.setEntityObj(entity);
             result.setProperties(properties);
-            result.setPropertyName(baseEntity);
+            result.setEntity(baseEntity);
             query.setResult(result);
         }
 
@@ -352,7 +352,7 @@ public class QueryBuilderImpl implements QueryBuilder {
      * @throws Json4ormException the json 4 orm exception
      */
     private void visit(final Result result, final String entityChain) throws Json4ormException {
-        String entity = result.getPropertyName();
+        String entity = result.getEntity();
 
         if (entity == null) {
             entity = baseEntity;
@@ -366,7 +366,7 @@ public class QueryBuilderImpl implements QueryBuilder {
         if (entityObj == null) {
             throw new Json4ormException("No entity defined for: " + entity);
         }
-        result.setEntity(entityObj);
+        result.setEntityObj(entityObj);
 
         final String alias = getOrCreateAlias(entity, aliasMapForResult);
         result.setAlias(alias);

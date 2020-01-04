@@ -361,10 +361,10 @@ public class QueryParser {
             }
         } else {
             if (entry.getValue() instanceof List) {
-                result.setPropertyName(entry.getKey());
+                result.setEntity(entry.getKey());
                 result.setProperties((List<String>) entry.getValue());
             } else if (entry.getValue() instanceof Map) {
-                result.setPropertyName(entry.getKey());
+                result.setEntity(entry.getKey());
                 final Map<String, Object> valueMap = (Map<String, Object>) entry.getValue();
                 for (final Map.Entry<String, Object> childEntry : valueMap.entrySet()) {
                     generateResult(childEntry, result);

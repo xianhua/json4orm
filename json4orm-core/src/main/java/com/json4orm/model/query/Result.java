@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.json4orm.model.schema.Entity;
 import com.json4orm.model.schema.Property;
 
@@ -31,15 +32,18 @@ import com.json4orm.model.schema.Property;
 public class Result {
 
     /** The property name. */
-    private String propertyName;
+    private String entity;
 
     /** The entity. */
-    private Entity entity;
+    @JsonIgnore
+    private Entity entityObj;
 
     /** The property. */
+    @JsonIgnore
     private Property property;
 
     /** The alias. */
+    @JsonIgnore
     private String alias;
 
     /** The properties. */
@@ -76,40 +80,20 @@ public class Result {
         this.properties = properties;
     }
 
-    /**
-     * Gets the property name.
-     *
-     * @return the property name
-     */
-    public String getPropertyName() {
-        return propertyName;
-    }
-
-    /**
-     * Sets the property name.
-     *
-     * @param propertyName the new property name
-     */
-    public void setPropertyName(final String propertyName) {
-        this.propertyName = propertyName;
-    }
-
-    /**
-     * Gets the entity.
-     *
-     * @return the entity
-     */
-    public Entity getEntity() {
+    public String getEntity() {
         return entity;
     }
 
-    /**
-     * Sets the entity.
-     *
-     * @param entity the new entity
-     */
-    public void setEntity(final Entity entity) {
+    public void setEntity(final String entity) {
         this.entity = entity;
+    }
+
+    public Entity getEntityObj() {
+        return entityObj;
+    }
+
+    public void setEntityObj(final Entity entityObj) {
+        this.entityObj = entityObj;
     }
 
     /**
@@ -183,4 +167,6 @@ public class Result {
     public void addProperty(final String property) {
         this.properties.add(property);
     }
+    
+    
 }

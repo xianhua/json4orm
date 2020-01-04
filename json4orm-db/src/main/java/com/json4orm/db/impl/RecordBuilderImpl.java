@@ -111,9 +111,9 @@ public class RecordBuilderImpl implements RecordBuilder {
     public void buildRecord(final ResultSet rs, final Result result, final QueryContext context, final Record parent)
             throws Json4ormException {
         Record record = retrieveValues(rs, result, context);
-        final Record existingRecord = parent.findChildRecord(result.getPropertyName(), record);
+        final Record existingRecord = parent.findChildRecord(result.getEntity(), record);
         if (existingRecord == null) {
-            parent.addAssociateRecord(result.getPropertyName(), record);
+            parent.addAssociateRecord(result.getEntity(), record);
         } else {
             record = existingRecord;
         }
@@ -154,7 +154,7 @@ public class RecordBuilderImpl implements RecordBuilder {
             }
         }
 
-        final Entity entity = result.getEntity();
+        final Entity entity = result.getEntityObj();
         final Record record = new Record(entity, values);
         return record;
     }
