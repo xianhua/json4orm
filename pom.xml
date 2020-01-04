@@ -7,6 +7,32 @@
 	<version>1.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Json4orm Parent</name>
+	<description>
+        Json4orm introduces standard to map relational database tables and SQL queries using JSON objects. 
+        It offers APIs to query data based on JSON orm mappings and queries. 
+    </description>
+    <url>http://www.json4orm.com/</url>
+    <licenses>
+        <license>
+            <name>The Apache License</name>
+            <url>http://www.apache.org/licenses</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>xianhua</id>
+            <name>Xianhua Liu</name>
+            <email>robertliu325@yahoo.com</email>
+            <organization>Json4orm</organization>
+            <organizationUrl>http://www.json4orm.com/</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>-5</timezone>
+        </developer>
+    </developers>
 	<scm>
 		<connection>scm:git:git://github.com/xianhua/json4orm.git</connection>
 		<developerConnection>scm:git:git@github.com/xianhua/json4orm.git</developerConnection>
