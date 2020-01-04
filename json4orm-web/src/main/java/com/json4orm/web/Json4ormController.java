@@ -18,8 +18,6 @@ package com.json4orm.web;
 
 import java.util.Map;
 
-import javax.annotation.PostConstruct;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,19 +55,11 @@ public class Json4ormController {
     private QueryParser queryParser;
 
     /**
-     * Inits the controller.
-     */
-    @PostConstruct
-    private void initController() {
-
-    }
-
-    /**
-     * Execute.
+     * Execute query with simplified format.
      *
-     * @param request the request
+     * @param request the request in simplified format
      * @return the response entity
-     * @throws Json4ormException the json 4 orm exception
+     * @throws Json4ormException
      */
     @PostMapping(path = "/json4orm/simplified", consumes = "text/plain", produces = "application/json")
     public ResponseEntity<Response> executeSimplified(@RequestBody final String request) throws Json4ormException {
@@ -77,15 +67,16 @@ public class Json4ormController {
         return executeQuery(query);
     }
 
+
     /**
-     * Execute.
+     * Execute query with normalized format.
      *
-     * @param request the request
+     * @param query the query in normalized format
      * @return the response entity
-     * @throws Json4ormException the json 4 orm exception
+     * @throws Json4ormException
      */
     @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Response> executeNomalized(@RequestBody final Query query) throws Json4ormException {
+    public ResponseEntity<Response> executeNormalized(@RequestBody final Query query) throws Json4ormException {
         return executeQuery(query);
     }
 

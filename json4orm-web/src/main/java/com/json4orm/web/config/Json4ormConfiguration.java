@@ -53,13 +53,15 @@ import com.json4orm.parser.QueryParser;
  * <P>
  * Here is an example.
  * </P>
- * json4orm:<br/>
- * entity-folder: entities<br/>
- * jdbc-config:<br/>
- * db-url: jdbc:postgresql://localhost:5432/postgres<br/>
- * db-user: postgres<br/>
- * db-password: postgres<br/>
- * 
+ * json4orm:
+ *   entity-folder: entities
+ *   jdbc-config:
+ *     db-url: jdbc:postgresql://localhost:5432/postgres
+ *     db-user: postgres
+ *     db-password: postgres
+ *   allowed-origins:
+ *     - http://localhost:8080
+ *     
  * @author Xianhua Liu
  */
 @Configuration
