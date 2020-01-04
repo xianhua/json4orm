@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.json4orm</groupId>
 	<artifactId>json4orm-parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>pom</packaging>
 	<name>Json4orm Parent</name>
 	<description>
@@ -35,7 +35,7 @@
 		<connection>scm:git:git://github.com/xianhua/json4orm.git</connection>
 		<developerConnection>scm:git:git@github.com/xianhua/json4orm.git</developerConnection>
 		<url>https://github.com/xianhua/json4orm</url>
-		<tag>HEAD</tag>
+		<tag>v1.0.0</tag>
 	</scm>
 	<properties>
 		<fasterxml.jackson.version>2.10.1</fasterxml.jackson.version>
