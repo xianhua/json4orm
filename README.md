@@ -7,6 +7,7 @@ Make data in relational database searchable online and deliverable with customiz
 - Support database query engine to execute queries defined in JSON based on ORMs defined in JSON
 ## Quick Example
 ### Entity Mapping
+Student
 ```
 #student.json
 {
@@ -46,7 +47,70 @@ Make data in relational database searchable online and deliverable with customiz
   ]
 }
 ```
-
+Class
+```
+{
+  name: "Class",
+  table: "class",
+  properties: [
+    {
+      name: "classId",
+      type: "ID",
+      column: "class_id"
+    },
+    {
+      name: "name",
+      type: "string",
+      column: "name"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    },
+    {
+      name: "classStudents",
+      type: "list",
+      column: "class_id",
+      itemType: "ClassStudent"
+    }
+  ]
+}
+```
+ClassStudent
+```
+{
+  name: "ClassStudent",
+  table: "class_student",
+  properties: [
+    {
+      name: "classStudentId",
+      type: "ID",
+      column: "class_student_id"
+    },
+    {
+      name: "class",
+      type: "Class",
+      column: "class_id"
+    },
+    {
+      name: "student",
+      type: "Student",
+      column: "student_id"
+    },
+    {
+      name: "score",
+      type: "float",
+      column: "score"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    }
+  ]
+}
+```
 ### Query in Json
 ```
 {
