@@ -1,0 +1,27 @@
+{
+  name: "School",
+  table: "school",
+  properties: [
+    {
+      name: "schoolId",
+      type: "ID",
+      column: "school_id"
+    },
+    {
+      name: "name",
+      type: "string",
+      column: "name"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    },
+    {
+      name: "classes",
+      type: "list",
+      column: "school_id",
+      itemType: "Class"
+    }
+  ]
+}

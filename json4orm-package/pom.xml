@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.json4orm</groupId>
+	<artifactId>json4orm-package</artifactId>
+	<version>1.0.0</version>
+	<dependencies>
+	</dependencies>
+
+	<properties>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>1.7</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<configuration>
+							<tasks>
+								<copy todir="${project.build.directory}/json4orm"
+									overwrite="true">
+									<fileset dir="../json4orm-web/target">
+										<include name="*.jar" />
+									</fileset>
+								</copy>
+								<copy todir="${project.build.directory}\json4orm\config"
+									overwrite="true">
+									<fileset dir="src\main\resources\config">
+										<include name="**/*" />
+									</fileset>
+								</copy>
+								<copy todir="${project.build.directory}\json4orm\lib"
+									overwrite="true">
+									<fileset dir="src\main\resources\lib">
+										<include name="**/*" />
+									</fileset>
+								</copy>
+								<zip
+									destfile="${project.build.directory}\json4orm-web-${project.version}.zip"
+									basedir="${project.build.directory}\json4orm" />
+							</tasks>
+						</configuration>
+						<goals>
+						  <goal>run</goal>
+						</goals> 
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

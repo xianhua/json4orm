@@ -7,9 +7,9 @@ logging:
 json4orm:
   entity-folder: ./config/entities
   jdbc-config:
-    db-url: jdbc:postgresql://localhost:5432/postgres
-    db-user: postgres
-    db-password: postgres
+    db-url: jdbc:h2:mem:test;MODE=MySQL;DB_CLOSE_ON_EXIT=TRUE;TRACE_LEVEL_SYSTEM_OUT=1;INIT=runscript from './config/scripts/test.sql'
+    db-user: test
+    db-password: test
   # the allowed origin for CORS. 
   # Leave it blank to allow request from all origins
   allowedOrigins:
