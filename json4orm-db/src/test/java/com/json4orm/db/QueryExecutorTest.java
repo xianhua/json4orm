@@ -80,7 +80,9 @@ public class QueryExecutorTest {
         q.setPagination(pagination);
         
         //set sorting
-        final SortBy sortByFirstName= new SortBy("firstName", "DESC");
+        final SortBy sortByFirstName= new SortBy();
+        sortByFirstName.setProperty("firstName");
+        sortByFirstName.setOrder("DESC");
         q.setSortBy(Collections.singletonList(sortByFirstName));
         
         // set filter: firstName starts with 'a' AND lastName ends with 'n'

@@ -176,7 +176,8 @@ public class QueryParser {
             throw new Json4ormException("Invalid sortBy '" + str + "'");
         }
 
-        final SortBy sortBy = new SortBy(parts[0]);
+        final SortBy sortBy = new SortBy();
+        sortBy.setProperty(parts[0]);
         if (parts.length == 2) {
             if (Constants.ORDER_ASC.equalsIgnoreCase(parts[1]) || Constants.ORDER_DESC.equalsIgnoreCase(parts[1])) {
                 sortBy.setOrder(parts[1]);

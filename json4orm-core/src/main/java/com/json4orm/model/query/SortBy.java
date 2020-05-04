@@ -31,7 +31,11 @@ public class SortBy {
     /** The order. */
     private String order = Constants.ORDER_ASC;
 
-    /**
+    public SortBy() {
+		super();
+	}
+
+	/**
      * Instantiates a new sort by.
      *
      * @param property the property

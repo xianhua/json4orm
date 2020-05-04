@@ -25,6 +25,7 @@ import java.util.Map;
 import com.json4orm.db.Record;
 import com.json4orm.db.Record2JsonUtil;
 import com.json4orm.db.RecordBuilder;
+import com.json4orm.engine.DatabaseDriver;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Result;
@@ -50,7 +51,8 @@ public class RecordBuilderImpl implements RecordBuilder {
         return records;
     }
 
-    /**
+
+	/**
      * Builds the record.
      *
      * @param rs      the rs

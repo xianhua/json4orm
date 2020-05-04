@@ -29,6 +29,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.QueryResult;
+import com.json4orm.engine.DatabaseDriver;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.impl.QueryBuilderImpl;
@@ -174,12 +175,14 @@ public class QueryExecutorImpl implements QueryExecutor {
     @Override
     public QueryResult execute(final Query query) throws Json4ormException {
         final QueryResult result = new QueryResult();
-        final QueryBuilderImpl queryBuilder = new QueryBuilderImpl(schema);
+        final QueryBuilderImpl queryBuilder = new QueryBuilderImpl(schema, dbUrl);
+        
         queryBuilder.setConvertor(valueConvertor);
         final QueryContext queryContext = queryBuilder.build(query);
         Connection conn = null;
         PreparedStatement ps = null;
         final RecordBuilderImpl recordBuilder = new RecordBuilderImpl();
+
         try {
             conn = getConnection();
             // get total count
