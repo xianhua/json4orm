@@ -106,22 +106,21 @@ public class QueryBuilderImpl implements QueryBuilder {
 		super();
 		this.schema = schema;
 	}
-	
+
 	public QueryBuilderImpl(final Schema schema, final String dbUrl) {
 		super();
 		this.schema = schema;
-		if(dbUrl.contains("oracle")) {
-        	setDatabaseDriver(DatabaseDriver.ORACLE);
-        }else if(dbUrl.contains("mysql")) {
-        	setDatabaseDriver(DatabaseDriver.MYSQL);
-        }else if(dbUrl.contains("h2")) {
-        	setDatabaseDriver(DatabaseDriver.H2);
-        }else if(dbUrl.contains("postgresql")) {
-        	setDatabaseDriver(DatabaseDriver.POSTGRESQL);
-        }
+		if (dbUrl.contains("oracle")) {
+			setDatabaseDriver(DatabaseDriver.ORACLE);
+		} else if (dbUrl.contains("mysql")) {
+			setDatabaseDriver(DatabaseDriver.MYSQL);
+		} else if (dbUrl.contains("h2")) {
+			setDatabaseDriver(DatabaseDriver.H2);
+		} else if (dbUrl.contains("postgresql")) {
+			setDatabaseDriver(DatabaseDriver.POSTGRESQL);
+		}
 	}
 
-	
 	public DatabaseDriver getDatabaseDriver() {
 		return databaseDriver;
 	}
@@ -306,6 +305,9 @@ public class QueryBuilderImpl implements QueryBuilder {
 	private String getLimitQuery() {
 		final String baseAlias = aliasMapForFilter.get(baseEntity);
 		final StringBuffer buf = new StringBuffer(100);
+		if (DatabaseDriver.ORACLE == databaseDriver) {
+			buf.append("SELECT temp2.* FROM   (SELECT temp1.*, rownum AS rnum FROM (");
+		}
 		buf.append("SELECT DISTINCT " + baseAlias + ".* FROM ");
 		boolean first = true;
 		for (final String key : fromTablesForFilter.keySet()) {
@@ -329,8 +331,9 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 		if (query.getPagination() != null) {
 			if (DatabaseDriver.ORACLE == this.databaseDriver) {
-				buf.append(
-						" OFFSET " + query.getPagination().getOffset() + " ROWS FETCH NEXT " + query.getPagination().getLimit()+" ROWS ONLY");
+				long maxrownum = query.getPagination().getOffset() + query.getPagination().getLimit();
+				buf.append(" ) temp1 WHERE rownum <= " + maxrownum + ") temp2 " + "WHERE  rnum > "
+						+ query.getPagination().getOffset());
 			} else {
 				buf.append(
 						" OFFSET " + query.getPagination().getOffset() + " LIMIT " + query.getPagination().getLimit());
@@ -371,8 +374,8 @@ public class QueryBuilderImpl implements QueryBuilder {
 		}
 
 		buf.append(")");
-		
-		if(DatabaseDriver.ORACLE != this.databaseDriver) {
+
+		if (DatabaseDriver.ORACLE != this.databaseDriver) {
 			buf.append(" AS temp");
 		}
 
