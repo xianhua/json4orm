@@ -172,7 +172,25 @@ public class Entity {
 
         return results;
     }
+    
+    public String findLinkedColumn(final String entityName) {
+    	List<Property> properties = findPropertiesByType(entityName);
+    	if(properties.isEmpty()) {
+    		return null;
+    	}
+    	
+    	return properties.get(0).getColumn();
+    }
 
+    public String findLinkedColumn(final Entity entity) {
+    	List<Property> properties = findPropertiesByType(entity.getName());
+    	if(properties.isEmpty()) {
+    		return null;
+    	}
+    	
+    	return properties.get(0).getColumn();
+    }
+    
     /**
      * Gets the owned propeties.
      *

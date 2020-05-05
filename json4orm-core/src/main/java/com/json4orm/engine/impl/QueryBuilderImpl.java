@@ -65,7 +65,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 	Map<String, String> fromTablesForFilter = new HashMap<>();
 
 	/** The from tables for result. */
-	Map<String, String> fromTablesForResult = new HashMap<>();
+	List<String> fromTablesForResult = new ArrayList<>();
 
 	/** The joins. */
 	List<String> joins = new ArrayList<>();
@@ -167,6 +167,13 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 	@Override
 	public QueryContext build(final Query query) throws Json4ormException {
+		// add default pagination if not set
+		if (query.getPagination() == null) {
+			Pagination pagination = new Pagination();
+			pagination.setOffset(0);
+			pagination.setLimit(25);
+			query.setPagination(pagination);
+		}
 		EngineUtil.resetAliasPlaceHolderCounts();
 		this.query = query;
 		baseEntity = query.getQueryFor();
@@ -192,11 +199,10 @@ public class QueryBuilderImpl implements QueryBuilder {
 			query.setResult(result);
 		}
 
-		visit(query.getResult(), "");
+		visit(query.getResult(), null);
 		visit(query.getPagination());
 		visit(query.getSortBy());
 		createFrom(fromTablesForFilter, aliasMapForFilter, whereForFilter);
-		createFrom(fromTablesForResult, aliasMapForResult, whereForResult);
 
 		return getQueryContext();
 	}
@@ -263,22 +269,8 @@ public class QueryBuilderImpl implements QueryBuilder {
 	private String getQuery() {
 		final StringBuffer buf = new StringBuffer(100);
 		buf.append("SELECT " + StringUtils.join(selectedColumns, ",") + " FROM ");
-		boolean first = true;
-		for (final String key : fromTablesForResult.keySet()) {
-			if (!first) {
-				buf.append(", ");
-			}
-
-			final Entity entity = schema.findEntity(key);
-			final String alias = fromTablesForResult.get(key);
-			buf.append(entity.getTable() + " " + alias);
-
-			first = false;
-		}
-
-		if (whereForResult.length() > 0) {
-			buf.append(" WHERE " + whereForResult.toString());
-		}
+		buf.append(String.join(" ", fromTablesForResult));
+		
 		if (query.getPagination() != null) {
 			if (whereForResult.length() > 0) {
 				buf.append(" AND ");
@@ -305,9 +297,10 @@ public class QueryBuilderImpl implements QueryBuilder {
 	private String getLimitQuery() {
 		final String baseAlias = aliasMapForFilter.get(baseEntity);
 		final StringBuffer buf = new StringBuffer(100);
-		if (DatabaseDriver.ORACLE == databaseDriver) {
+		if (query.getPagination() != null && DatabaseDriver.ORACLE == databaseDriver) {
 			buf.append("SELECT temp2.* FROM   (SELECT temp1.*, rownum AS rnum FROM (");
 		}
+
 		buf.append("SELECT DISTINCT " + baseAlias + ".* FROM ");
 		boolean first = true;
 		for (final String key : fromTablesForFilter.keySet()) {
@@ -389,6 +382,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 	 * @param entityChain the entity chain
 	 * @throws Json4ormException the json 4 orm exception
 	 */
+	/*
 	private void visit(final Result result, final String entityChain) throws Json4ormException {
 		String entity = result.getEntity();
 
@@ -449,6 +443,82 @@ public class QueryBuilderImpl implements QueryBuilder {
 		}
 
 	}
+    */
+	private void visit(final Result result, final Result parent) throws Json4ormException {
+		String entity = result.getEntity();
+
+		if (entity == null) {
+			entity = baseEntity;
+		}
+		
+	    Entity entityObj = schema.findEntity(entity);
+		if (entityObj == null) {
+			if(parent!=null) {
+				Property property = parent.getEntityObj().getProperty(entity);
+				if(property != null ) {
+					entityObj = schema.findEntity(property.getEntityType());
+					if (entityObj == null) {
+						entityObj = schema.findEntity(property.getItemType());
+					}
+				}
+			}
+			
+			if(entityObj ==null) {
+				throw new Json4ormException("No entity defined for: " + entity);
+			}
+			
+		}
+		result.setEntityObj(entityObj);
+
+		final String alias = getOrCreateAlias(entityObj, aliasMapForResult);
+		result.setAlias(alias);
+
+		for (final String s : result.getProperties()) {
+			final Property p = entityObj.getProperty(s);
+			if (p == null) {
+				throw new Json4ormException("No property defined for: " + entity + "." + s);
+			}
+			selectedColumns.add(alias + "." + p.getColumn());
+			selectedProperties.add(alias + "." + p.getName());
+		}
+
+		// add PK if missing
+		final Property idProperty = entityObj.getIdProperty();
+		if (idProperty != null) {
+			if (StringUtils.isNotBlank(idProperty.getColumn())) {
+				final String idField = alias + "." + idProperty.getColumn();
+				if (!selectedColumns.contains(idField)) {
+					selectedColumns.add(idField);
+					final Property p = entityObj.getPropertyByColumn(idProperty.getColumn());
+					selectedProperties.add(alias + "." + p.getName());
+					result.addProperty(p.getName());
+				}
+			} else if (!EngineUtil.isEmpty(idProperty.getColumns())) {
+				for (final String idColumn : idProperty.getColumns()) {
+					final String idField = alias + "." + idColumn;
+					if (!selectedColumns.contains(idField)) {
+						selectedColumns.add(idField);
+						final Property p = entityObj.getPropertyByColumn(idColumn);
+						selectedProperties.add(alias + "." + p.getName());
+						result.addProperty(p.getName());
+					}
+				}
+			}
+		}
+
+		if(parent != null) {
+			//add left join
+			fromTablesForResult.add(createJoins(parent.getEntityObj(), entityObj, "LEFT JOIN"));
+		}else {
+			fromTablesForResult.add(entityObj.getTable()+" " + alias);
+		}
+		
+		if (result.getAssociates() != null && result.getAssociates().size() > 0) {
+			for (final Result assocResult : result.getAssociates()) {
+				visit(assocResult, result);
+			}
+		}
+	}
 
 	/**
 	 * Gets the or create alias.
@@ -466,6 +536,17 @@ public class QueryBuilderImpl implements QueryBuilder {
 		final Entity entity = schema.findEntity(property);
 		final String alias = EngineUtil.getAlias(entity.getName());
 		aliasMap.put(property, alias);
+		return alias;
+	}
+
+	private String getOrCreateAlias(final Entity entity, final Map<String, String> aliasMap) throws Json4ormException {
+		final String entityName = entity.getName();
+		if (aliasMap.containsKey(entityName)) {
+			return aliasMap.get(entityName);
+		}
+
+		final String alias = EngineUtil.getAlias(entityName);
+		aliasMap.put(entityName, alias);
 		return alias;
 	}
 
@@ -646,6 +727,37 @@ public class QueryBuilderImpl implements QueryBuilder {
 		}
 	}
 
+	private void createResultJoin(final Map<String, String> fromTables, final Map<String, String> aliasMap,
+			final StringBuffer where) throws Json4ormException {
+
+		for (final String entityChain : aliasMap.keySet()) {
+			String from = null, to = null, fromAlias = null, toAlias = null;
+			final String ss[] = entityChain.split("\\.");
+
+			String entity = "";
+			for (final String s : ss) {
+				if (entity.length() > 0) {
+					entity += ".";
+				}
+				entity += s;
+				to = entity;
+				toAlias = this.getOrCreateAlias(to, aliasMap);
+
+				if (!fromTables.containsKey(to)) {
+					toAlias = this.getOrCreateAlias(to, aliasMap);
+				}
+				fromTables.put(to, toAlias);
+
+				if (from != null) {
+					createJoins(from, fromAlias, entity, toAlias, where);
+				}
+
+				from = to;
+				fromAlias = toAlias;
+			}
+		}
+	}
+
 	/**
 	 * Creates the joins.
 	 *
@@ -684,4 +796,22 @@ public class QueryBuilderImpl implements QueryBuilder {
 		}
 		where.append(" " + fromAlias + "." + fromColumn + " = " + toAlias + "." + toColumn + " ");
 	}
+
+	private String createJoins(final Entity fromEntity, final Entity toEntity, final String joinType) throws Json4ormException {
+		final String fromAlias = getOrCreateAlias(fromEntity, aliasMapForResult);
+		final String toAlias = getOrCreateAlias(toEntity, aliasMapForResult);
+
+		String fromColumn = fromEntity.findLinkedColumn(toEntity);
+		if(fromColumn==null) {
+			fromColumn = fromEntity.getIdProperty().getColumn();
+		}
+		String toColumn = toEntity.findLinkedColumn(fromEntity);
+		if(toColumn==null) {
+			toColumn = toEntity.getIdProperty().getColumn();
+		}
+
+		return joinType + " " + toEntity.getTable() + " " + toAlias + " ON " + fromAlias + "." + fromColumn + " = " + toAlias + "." + toColumn;
+	}
+	
+	
 }
