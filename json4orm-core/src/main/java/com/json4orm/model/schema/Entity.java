@@ -133,7 +133,7 @@ public class Entity {
      */
     public Property getPropertyByColumn(final String name) {
         for (final Property p : properties) {
-            if (p.getColumn().equalsIgnoreCase(name)) {
+            if (p.getColumn()!=null && p.getColumn().equalsIgnoreCase(name)) {
                 return p;
             }
         }
