@@ -5,7 +5,8 @@
     {
       name: "classId",
       type: "ID",
-      column: "class_id"
+      column: "class_id",
+      idGenerator: "AUTO"
     },
     {
       name: "name",
