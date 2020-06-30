@@ -24,11 +24,13 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.json4orm.engine.AddOrUpdateContext;
 import com.json4orm.engine.DatabaseDriver;
 import com.json4orm.engine.QueryBuilder;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
 import com.json4orm.model.query.Pagination;
@@ -36,7 +38,9 @@ import com.json4orm.model.query.Query;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.query.SortBy;
 import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.IdGenerator;
 import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.PropertyType;
 import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
@@ -48,6 +52,7 @@ import com.json4orm.util.EngineUtil;
  */
 public class QueryBuilderImpl implements QueryBuilder {
 
+    private static final String VALUE_PLACEHOLDER_PREFIX = ":";
 	private DatabaseDriver databaseDriver = DatabaseDriver.H2;
 	/** The query. */
 	private Query query;
@@ -125,7 +130,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 		return databaseDriver;
 	}
 
-	public void setDatabaseDriver(DatabaseDriver databaseDriver) {
+	public void setDatabaseDriver(final DatabaseDriver databaseDriver) {
 		this.databaseDriver = databaseDriver;
 	}
 
@@ -169,7 +174,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 	public QueryContext build(final Query query) throws Json4ormException {
 		// add default pagination if not set
 		if (query.getPagination() == null) {
-			Pagination pagination = new Pagination();
+			final Pagination pagination = new Pagination();
 			pagination.setOffset(0);
 			pagination.setLimit(25);
 			query.setPagination(pagination);
@@ -324,7 +329,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 		if (query.getPagination() != null) {
 			if (DatabaseDriver.ORACLE == this.databaseDriver) {
-				long maxrownum = query.getPagination().getOffset() + query.getPagination().getLimit();
+				final long maxrownum = query.getPagination().getOffset() + query.getPagination().getLimit();
 				buf.append(" ) temp1 WHERE rownum <= " + maxrownum + ") temp2 " + "WHERE  rnum > "
 						+ query.getPagination().getOffset());
 			} else {
@@ -454,7 +459,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 	    Entity entityObj = schema.findEntity(entity);
 		if (entityObj == null) {
 			if(parent!=null) {
-				Property property = parent.getEntityObj().getProperty(entity);
+				final Property property = parent.getEntityObj().getProperty(entity);
 				if(property != null ) {
 					entityObj = schema.findEntity(property.getEntityType());
 					if (entityObj == null) {
@@ -812,6 +817,70 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 		return joinType + " " + toEntity.getTable() + " " + toAlias + " ON " + fromAlias + "." + fromColumn + " = " + toAlias + "." + toColumn;
 	}
+
+    @Override
+    public AddOrUpdateContext build(final AddOrUpdate addOrUpdate) throws Json4ormException {
+        final AddOrUpdateContext context = new AddOrUpdateContext();
+        context.setAddOrUpdate(addOrUpdate);
+        
+        final Entity entity = schema.findEntity(addOrUpdate.getAddOrUpdate());
+        if(entity== null) {
+            throw new Json4ormException("Noo entity found for name: "+ addOrUpdate.getAddOrUpdate());
+        }
+        context.setEntity(entity);
+        final Property idProperty = entity.getIdProperty();
+        if(idProperty== null) {
+            throw new Json4ormException("No ID property defined for entity: "+ entity.getName());
+        }
+        
+        final StringBuffer sb = new StringBuffer();
+        
+        final List<String> fields = new ArrayList<>();
+        final List<String> valuePlaceHolders = new ArrayList<>();
+        final List<String> setters = new ArrayList<>();
+        
+        for(final Property p: entity.getProperties()) {
+           if(p.getType().equalsIgnoreCase(PropertyType.PTY_ID)) {
+               if(!IdGenerator.AUTO.equalsIgnoreCase(p.getIdGenerator())){
+                   if(StringUtils.isNotBlank(p.getColumn())) {
+                       fields.add(p.getColumn());
+                       valuePlaceHolders.add(VALUE_PLACEHOLDER_PREFIX + p.getName());
+                   }
+               }
+           } else {
+               fields.add(p.getColumn());
+               setters.add("SET " + p.getColumn() +" = "+ VALUE_PLACEHOLDER_PREFIX + p.getName());
+           }
+        }
+        
+        sb.append("INSERT INTO ");
+        sb.append(entity.getTable());
+        sb.append(" ( ");
+        sb.append(StringUtils.join(fields, ","));
+        sb.append(" ) values (");
+        sb.append( StringUtils.join(valuePlaceHolders, ","));
+        sb.append(" )");
+        context.setInsertSql(sb.toString());
+        
+        sb.append("UPDATE ");
+        sb.append(entity.getTable());
+        sb.append(StringUtils.join(setters, ","));
+        sb.append(" WHERE ");
+        sb.append( idProperty.getColumn());
+        sb.append(" = ");
+        sb.append( VALUE_PLACEHOLDER_PREFIX);
+        sb.append( idProperty.getName());
+        
+        context.setUpdateSql(sb.toString());
+        
+        
+        for(final Property p: entity.getProperties()) {
+            
+        }
+        
+        
+        return null;
+    }
 	
 	
 }

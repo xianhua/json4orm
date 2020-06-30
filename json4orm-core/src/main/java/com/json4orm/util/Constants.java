@@ -69,5 +69,9 @@ public final class Constants {
 
     /** The Constant LIMIT_IDS. */
     public static final String LIMIT_IDS = ":LIMIT_IDS";
+    
+    public static final String ADD_OR_UPDATE="addOrUpdate";
+    
+    public static final String DATA = "data";
 
 }
