@@ -816,25 +816,28 @@ public class QueryBuilderImpl implements QueryBuilder {
 
         final StringBuffer sb = new StringBuffer();
 
+        final List<Property> properties = new ArrayList<>();
         final List<String> fields = new ArrayList<>();
         final List<String> valuePlaceHolders = new ArrayList<>();
         final List<String> setters = new ArrayList<>();
 
         for (final Property p : entity.getProperties()) {
             if (p.getType().equalsIgnoreCase(PropertyType.PTY_ID)) {
-                if (!IdGenerator.AUTO.equalsIgnoreCase(p.getIdGenerator())) {
-                    if (StringUtils.isNotBlank(p.getColumn())) {
-                        fields.add(p.getColumn());
-                        valuePlaceHolders.add(VALUE_PLACEHOLDER_PREFIX + p.getName());
-                    }
+                if (p.getIdGenerator() != null && !IdGenerator.AUTO.equalsIgnoreCase(p.getIdGenerator())) {
+                    properties.add(p);
                 }
-            } else if( !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType()))  {
-                fields.add(p.getColumn());
-                valuePlaceHolders.add(VALUE_PLACEHOLDER_PREFIX + p.getName());
-                setters.add( p.getColumn() + " = " + VALUE_PLACEHOLDER_PREFIX + p.getName());
+            } else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+                properties.add(p);
             }
         }
-        
+
+        for (final Property p : properties) {
+            fields.add(p.getColumn());
+            valuePlaceHolders.add("?");
+            if (!p.getType().equalsIgnoreCase(PropertyType.PTY_ID)) {
+                setters.add(p.getColumn() + "=?");
+            }
+        }
         sb.append("INSERT INTO ");
         sb.append(entity.getTable());
         sb.append(" ( ");
@@ -844,54 +847,52 @@ public class QueryBuilderImpl implements QueryBuilder {
         sb.append(" )");
         context.setInsertSql(sb.toString());
 
-        sb.delete(0,  sb.length());
+        sb.delete(0, sb.length());
         sb.append("UPDATE ");
         sb.append(entity.getTable());
         sb.append(" SET " + StringUtils.join(setters, ","));
         sb.append(" WHERE ");
         sb.append(idProperty.getColumn());
-        sb.append(" = ");
-        sb.append(VALUE_PLACEHOLDER_PREFIX);
-        sb.append(idProperty.getName());
+        sb.append(" = ?");
 
         context.setUpdateSql(sb.toString());
 
-        boolean isNewRecord = false;
         for (final Map<String, Object> valueMap : addOrUpdate.getData()) {
-            final Map<String, Object> record =  new HashMap<>();
-            isNewRecord = false;
-            for (final Property p : entity.getProperties()) {
+            final List<Object> record = new ArrayList<>();
+            final Object primaryKey = convertor.convert(idProperty, valueMap.get(idProperty.getName()));
+            
+            for (final Property p : properties) {
                 final Object o = valueMap.get(p.getName());
-                if(PropertyType.isTypeValid(p.getType()) && !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())){
-                   record.put(p.getName(), convertor.convert(p, o));
-                   if(PropertyType.PTY_ID.equalsIgnoreCase(p.getType())) {
-                       isNewRecord = (o == null);
-                   }
-                } else if( !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
-                   
-                   if(o != null && o instanceof Map) {
-                       final Entity associatedEntity = schema.getEntity(p.getType());
-                       if(associatedEntity==null) {
-                           throw new Json4ormException("No Entity found for name: " + p.getType());
-                       }
-                       
-                       final Property idp = associatedEntity.getIdProperty();
-                       if(idp==null) {
-                           throw new Json4ormException("No ID property defined for entity: " + p.getType());
-                       }
-                       
-                       final Map<String, Object> associatedEntityValues = (Map<String, Object> ) o;
-                       if( associatedEntityValues.get(idp.getName()) == null){
-                           throw new Json4ormException("No ID value defined for entity: " + p.getName() + " in " + entity.getName());
-                       }
-                       record.put(p.getName(), convertor.convert(idp, associatedEntityValues.get(idp.getName())));
-                   }
+            
+                if (PropertyType.isTypeValid(p.getType()) && !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+                    record.add(convertor.convert(p, o));
+                } else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+
+                    if (o != null && o instanceof Map) {
+                        final Entity associatedEntity = schema.getEntity(p.getType());
+                        if (associatedEntity == null) {
+                            throw new Json4ormException("No Entity found for name: " + p.getType());
+                        }
+
+                        final Property idp = associatedEntity.getIdProperty();
+                        if (idp == null) {
+                            throw new Json4ormException("No ID property defined for entity: " + p.getType());
+                        }
+
+                        final Map<String, Object> associatedEntityValues = (Map<String, Object>) o;
+                        if (associatedEntityValues.get(idp.getName()) == null) {
+                            throw new Json4ormException(
+                                    "No ID value defined for entity: " + p.getName() + " in " + entity.getName());
+                        }
+                        record.add(convertor.convert(idp, associatedEntityValues.get(idp.getName())));
+                    }
                 }
             }
-            
-            if(isNewRecord) {
+
+            if (primaryKey == null) {
                 context.addInsertRecord(record);
-            }else {
+            } else {
+                record.add(primaryKey);
                 context.addUpdateRecord(record);
             }
         }

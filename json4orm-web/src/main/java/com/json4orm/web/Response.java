@@ -23,7 +23,7 @@ package com.json4orm.web;
 public class Response {
     
     /** The status. */
-    private String status;
+    private Status status;
     
     /** The error. */
     private String error;
@@ -33,7 +33,7 @@ public class Response {
      *
      * @return the status
      */
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
@@ -42,7 +42,7 @@ public class Response {
      *
      * @param status the new status
      */
-    public void setStatus(final String status) {
+    public void setStatus(final Status status) {
         this.status = status;
     }
 

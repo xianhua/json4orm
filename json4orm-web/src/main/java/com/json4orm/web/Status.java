@@ -16,16 +16,14 @@
 package com.json4orm.web;
 
 /**
- * The Class Constants.
+ * The enum Status.
  *
  * @author Xianhua Liu
  */
-public class Constants {
+public enum Status {
     
     /** The Constant STATUS_SUCCESS. */
-    public static final String STATUS_SUCCESS = "SUCCESS";
-    
-    /** The Constant STATUS_FAIL. */
-    public static final String STATUS_FAIL = "FAIL";
+    SUCCESS,
+    FAIL
 
 }

@@ -16,6 +16,7 @@
 package com.json4orm.db;
 
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Query;
 
 /**
@@ -26,11 +27,20 @@ import com.json4orm.model.query.Query;
 public interface QueryExecutor {
 
     /**
-     * Execute.
+     * Execute search query.
      *
      * @param query the query
      * @return the query result
      * @throws Json4ormException the json 4 orm exception
      */
     public QueryResult execute(final Query query) throws Json4ormException;
+    
+    /**
+     * Execute add or update query.
+     *
+     * @param addOrUpdate the add or update
+     * @return the query result
+     * @throws Json4ormException the json 4 orm exception
+     */
+    public QueryResult execute(final AddOrUpdate addOrUpdate) throws Json4ormException;
 }

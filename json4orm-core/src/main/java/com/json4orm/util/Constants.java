@@ -27,6 +27,11 @@ public final class Constants {
     public static final String QUERY = "query";
 
     public static final String QUERY_FOR = "queryFor";
+    
+    public static final String ADD_OR_UPDATE = "addOrUpdate";
+    
+    public static final String DELETE = "delete";
+    
 
     /** The Constant PAGINATION. */
     public static final String PAGINATION = "pagination";
@@ -70,7 +75,6 @@ public final class Constants {
     /** The Constant LIMIT_IDS. */
     public static final String LIMIT_IDS = ":LIMIT_IDS";
     
-    public static final String ADD_OR_UPDATE="addOrUpdate";
     
     public static final String DATA = "data";
 

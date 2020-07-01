@@ -44,7 +44,7 @@ import com.json4orm.util.EngineUtil;
  *
  * @author Xianhua Liu
  */
-public class QueryParser {
+public class QueryParser implements Parser<Query> {
 
     /** The Constant OBJ_MAPPER. */
     private static final ObjectMapper OBJ_MAPPER;
@@ -60,6 +60,7 @@ public class QueryParser {
      * @return the query
      * @throws Json4ormException the json 4 orm exception
      */
+    @Override
     public Query parse(final InputStream inputStream) throws Json4ormException {
         Map<String, Object> jsonMap = null;
         try {
@@ -78,6 +79,7 @@ public class QueryParser {
      * @return the query
      * @throws Json4ormException the json 4 orm exception
      */
+    @Override
     public Query parse(final File queryFile) throws Json4ormException {
         Map<String, Object> jsonMap = null;
         try {
@@ -97,6 +99,7 @@ public class QueryParser {
      * @return the query
      * @throws Json4ormException the json 4 orm exception
      */
+    @Override
     public Query parse(final String queryString) throws Json4ormException {
 
         Map<String, Object> jsonMap = null;
@@ -117,12 +120,16 @@ public class QueryParser {
      * @return the query
      * @throws Json4ormException the json 4 orm exception
      */
-    private Query parse(final Map<String, Object> jsonMap) throws Json4ormException {
+    @Override
+    public Query parse(final Map<String, Object> jsonMap) throws Json4ormException {
         final Query query = new Query();
         // get query target
-        final String queryFor = (String) jsonMap.get(Constants.QUERY_FOR);
+        String queryFor = (String) jsonMap.get(Constants.QUERY);
         if (StringUtils.isBlank(queryFor)) {
-            throw new Json4ormException("No query specified.");
+            queryFor = (String) jsonMap.get(Constants.QUERY_FOR);
+            if (StringUtils.isBlank(queryFor)) {
+                throw new Json4ormException("No query specified.");
+            }
         }
         query.setQueryFor(queryFor);
         query.setFilter(generateFilter(jsonMap.get(Constants.FILTER)));
@@ -378,5 +385,4 @@ public class QueryParser {
 
         return result;
     }
-
 }

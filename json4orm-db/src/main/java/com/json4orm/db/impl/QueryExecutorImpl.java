@@ -29,12 +29,13 @@ import org.apache.logging.log4j.Logger;
 
 import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.QueryResult;
-import com.json4orm.engine.DatabaseDriver;
+import com.json4orm.engine.AddOrUpdateContext;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.impl.QueryBuilderImpl;
 import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
@@ -45,22 +46,22 @@ import com.json4orm.util.Constants;
  * @author Xianhua Liu
  */
 public class QueryExecutorImpl implements QueryExecutor {
-    
+
     /** The Constant LOG. */
     private static final Logger LOG = LogManager.getLogger(QueryExecutorImpl.class);
-    
+
     /** The db url. */
     private String dbUrl;
-    
+
     /** The db user. */
     private String dbUser;
-    
+
     /** The db password. */
     private String dbPassword;
-    
+
     /** The schema. */
     private Schema schema;
-    
+
     /** The value convertor. */
     private ValueConvertor valueConvertor = new ValueConvertorImpl();
 
@@ -176,7 +177,7 @@ public class QueryExecutorImpl implements QueryExecutor {
     public QueryResult execute(final Query query) throws Json4ormException {
         final QueryResult result = new QueryResult();
         final QueryBuilderImpl queryBuilder = new QueryBuilderImpl(schema, dbUrl);
-        
+
         queryBuilder.setConvertor(valueConvertor);
         final QueryContext queryContext = queryBuilder.build(query);
         Connection conn = null;
@@ -241,9 +242,82 @@ public class QueryExecutorImpl implements QueryExecutor {
             } catch (final SQLException e) {
                 throw new Json4ormException(e);
             }
-
         }
 
+    }
+
+    @Override
+    public QueryResult execute(final AddOrUpdate addOrUpdate) throws Json4ormException {
+        final QueryResult result = new QueryResult();
+        final QueryBuilderImpl queryBuilder = new QueryBuilderImpl(schema, dbUrl);
+
+        queryBuilder.setConvertor(valueConvertor);
+        final AddOrUpdateContext queryContext = queryBuilder.build(addOrUpdate);
+        Connection conn = null;
+        PreparedStatement psInsert = null;
+        PreparedStatement psUpdate = null;
+        int total = 0;
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);
+            // execute insert query
+            LOG.debug("Insert query for records: " + queryContext.getInsertRecords().size());
+            LOG.debug("Executing insert query: " + queryContext.getInsertSql());
+            psInsert = conn.prepareStatement(queryContext.getInsertSql());
+            for (final List<Object> record : queryContext.getInsertRecords()) {
+                for (int i=0;i< record.size(); i++) {
+                    psInsert.setObject(i+1, record.get(i));
+                }
+                psInsert.executeUpdate();
+                total++;
+            }
+            psInsert.close();
+            
+            // execute update query
+            LOG.debug("Update query for records: " + queryContext.getUpdateRecords().size());
+            LOG.debug("Executing update query: " + queryContext.getUpdateSql());
+            psUpdate = conn.prepareStatement(queryContext.getUpdateSql());
+            for (final List<Object> record : queryContext.getUpdateRecords()) {
+                for (int i=0;i< record.size(); i++) {
+                    psUpdate.setObject(i+1, record.get(i));
+                }
+                psUpdate.executeUpdate();
+                total++;
+            }
+            psUpdate.close();
+            
+            conn.commit();
+            LOG.debug("Finished query.");
+            result.setTotal(total);
+            return result;
+        } catch (final SQLException e) {
+            if (conn != null) {
+                try {
+                    LOG.error("Failed to addOrUpdate.", e);
+                    conn.rollback();
+                } catch (final SQLException excep) {
+                    LOG.error("Failed to roll back.", excep);
+                    throw new Json4ormException(excep);
+                }
+            }
+            throw new Json4ormException(e);
+        } finally {
+            try {
+                if (psInsert != null) {
+                    psInsert.close();
+                }
+                
+                if (psUpdate != null) {
+                    psUpdate.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (final SQLException e) {
+                throw new Json4ormException(e);
+            }
+
+        }
     }
 
 }

@@ -30,9 +30,13 @@ import org.springframework.web.bind.annotation.RestController;
 import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.QueryResult;
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
+import com.json4orm.parser.Parser;
+import com.json4orm.parser.ParserFactory;
 import com.json4orm.parser.QueryParser;
+import com.json4orm.util.Constants;
 
 /**
  * The Class Json4ormController contains functions to serve the query request
@@ -50,9 +54,6 @@ public class Json4ormController {
     @Autowired
     private QueryExecutor queryExecutor;
 
-    /** The query parser. */
-    @Autowired
-    private QueryParser queryParser;
 
     /**
      * Execute query with simplified format.
@@ -64,6 +65,7 @@ public class Json4ormController {
      */
     @PostMapping(path = "/json4orm/simplified", consumes = "text/plain", produces = "application/json")
     public ResponseEntity<Response> executeSimplified(@RequestBody final String request) throws Json4ormException {
+        final QueryParser queryParser = (QueryParser)ParserFactory.getParser(Constants.QUERY);
         final Query query = queryParser.parse(request);
         return executeQuery(query);
     }
@@ -76,21 +78,79 @@ public class Json4ormController {
      * @throws Json4ormException when query is invalid or failure occurs during
      *                           database query
      */
+    //@PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
+    //public ResponseEntity<Response> executeNormalized(@RequestBody final Query query) throws Json4ormException {
+    //    return executeQuery(query);
+    //}
+
     @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Response> executeNormalized(@RequestBody final Query query) throws Json4ormException {
-        return executeQuery(query);
+    public ResponseEntity<Response> processQuery(@RequestBody final Map<String, Object> request)
+            throws Json4ormException {
+        return executeQuery(request);
+    }
+
+    private ResponseEntity<Response> executeQuery(final Map<String, Object> request) {
+
+        final QueryResponse<Map<String, Object>> response = new QueryResponse<>();
+        final String action = getAction(request);
+        if (action == null) {
+            response.setStatus(Status.FAIL);
+            response.setError("Invalid action: " + action);
+            return new ResponseEntity<Response>(response, HttpStatus.BAD_REQUEST);
+        }
+        final Parser<?> parser = ParserFactory.getParser(action);
+
+        if (parser == null) {
+            response.setStatus(Status.FAIL);
+            response.setError("No parser found for action: " + action);
+            return new ResponseEntity<Response>(response, HttpStatus.BAD_REQUEST);
+        }
+        try {
+            final Object query = parser.parse(request);
+            if (query instanceof Query) {
+                return executeQuery((Query) query);
+            } else if (query instanceof AddOrUpdate) {
+                return executeAddOrUpdate((AddOrUpdate) query);
+            } else {
+                throw new Json4ormException("Invalid query type.");
+            }
+        } catch (final Json4ormException e) {
+            response.setStatus(Status.FAIL);
+            response.setError("Failed to execute: " + action + " due to: " +e.getLocalizedMessage());
+            return new ResponseEntity<Response>(response, HttpStatus.BAD_REQUEST);
+        }
+
     }
 
     private ResponseEntity<Response> executeQuery(final Query query) throws Json4ormException {
         LOG.debug("Query for: " + query.getQueryFor());
         final QueryResult result = queryExecutor.execute(query);
         final QueryResponse<Map<String, Object>> response = new QueryResponse<>();
-        response.setStatus(Constants.STATUS_SUCCESS);
+        response.setStatus(Status.SUCCESS);
         response.setResults(result.getRecords());
         final Pagination pagination = query.getPagination();
         pagination.setCount(result.getRecords().size());
         pagination.setTotal(result.getTotal());
         response.setPagination(pagination);
         return new ResponseEntity<Response>(response, HttpStatus.OK);
+    }
+
+    private ResponseEntity<Response> executeAddOrUpdate(final AddOrUpdate query) throws Json4ormException {
+        LOG.debug("AddOrUpdate for: " + query.getAddOrUpdate());
+        final QueryResult result = queryExecutor.execute(query);
+        final QueryResponse<Map<String, Object>> response = new QueryResponse<>();
+        response.setStatus(Status.SUCCESS);
+        return new ResponseEntity<Response>(response, HttpStatus.OK);
+    }
+
+    private String getAction(final Map<String, Object> request) {
+        if (request.get(Constants.QUERY_FOR) != null) {
+            return Constants.QUERY_FOR;
+        } else if (request.get(Constants.ADD_OR_UPDATE) != null) {
+            return Constants.ADD_OR_UPDATE;
+        } else if (request.get(Constants.DELETE) != null) {
+            return Constants.DELETE;
+        }
+        return null;
     }
 }

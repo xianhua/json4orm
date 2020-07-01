@@ -2,7 +2,6 @@ package com.json4orm.engine;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.schema.Entity;
@@ -17,8 +16,8 @@ public class AddOrUpdateContext {
     private String updateSql;
     private AddOrUpdate addOrUpdate;
     
-    private List<Map<String, Object>> insertRecords = new ArrayList<>();
-    private List<Map<String, Object>> updateRecords = new ArrayList<>();
+    private List<List<Object>> insertRecords = new ArrayList<>();
+    private List<List<Object>> updateRecords = new ArrayList<>();
     
     
     public Entity getEntity() {
@@ -46,24 +45,25 @@ public class AddOrUpdateContext {
     public void setUpdateSql(final String updateSql) {
         this.updateSql = updateSql;
     }
-    public List<Map<String, Object>> getInsertRecords() {
+    
+    
+    public List<List<Object>> getInsertRecords() {
         return insertRecords;
     }
-    public void setInsertRecords(final List<Map<String, Object>> insertRecords) {
+    public void setInsertRecords(final List<List<Object>> insertRecords) {
         this.insertRecords = insertRecords;
     }
-    public List<Map<String, Object>> getUpdateRecords() {
+    public List<List<Object>> getUpdateRecords() {
         return updateRecords;
     }
-    public void setUpdateRecords(final List<Map<String, Object>> updateRecords) {
+    public void setUpdateRecords(final List<List<Object>> updateRecords) {
         this.updateRecords = updateRecords;
     }
-    
-    public void addInsertRecord(final Map<String, Object> record) {
+    public void addInsertRecord(final List<Object> record) {
         this.insertRecords.add(record);
     }
     
-    public void addUpdateRecord(final Map<String, Object> record) {
+    public void addUpdateRecord(final List<Object> record) {
         this.updateRecords.add(record);
     }
     

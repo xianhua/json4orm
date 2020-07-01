@@ -5,8 +5,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Map;
+import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -80,19 +81,15 @@ public class QueryBuilderImplTest {
         System.out.println("------------ Insert ------------");
         System.out.println(result.getInsertSql());
         
-        for (final Map<String, Object> v : result.getInsertRecords()) {
-            for(final Map.Entry<String, Object> entry: v.entrySet()) {
-                System.out.println(entry.getKey() + " = " + entry.getValue());
-            }
+        for (final List<Object> v : result.getInsertRecords()) {
+            System.out.println(StringUtils.join(v,", "));
         }
         
         System.out.println("------------ Update ------------");
         System.out.println(result.getUpdateSql());
 
-        for (final Map<String, Object> v : result.getUpdateRecords()) {
-            for(final Map.Entry<String, Object> entry: v.entrySet()) {
-                System.out.println(entry.getKey() + " = " + entry.getValue());
-            }
+        for (final List<Object> v : result.getUpdateRecords()) {
+            System.out.println(StringUtils.join(v,", "));
         }
     }
 }
