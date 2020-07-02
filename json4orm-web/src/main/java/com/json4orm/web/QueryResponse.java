@@ -32,7 +32,7 @@ public class QueryResponse<T> extends Response {
     
     /** The results. */
     private List<T> results;
-
+    
     /**
      * Gets the pagination.
      *

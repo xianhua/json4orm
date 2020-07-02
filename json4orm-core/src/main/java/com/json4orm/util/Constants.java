@@ -28,6 +28,8 @@ public final class Constants {
 
     public static final String QUERY_FOR = "queryFor";
     
+    public static final String SEARCH = "search";
+    
     public static final String ADD_OR_UPDATE = "addOrUpdate";
     
     public static final String DELETE = "delete";
@@ -77,5 +79,8 @@ public final class Constants {
     
     
     public static final String DATA = "data";
+    
+    public static final String ID = "id";
+    
 
 }

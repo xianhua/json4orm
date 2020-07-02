@@ -16,18 +16,27 @@
 package com.json4orm.model.query;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * The Class Query defines the data structure to represent a query, including
- * query entity, filter, pagination, sorting and result template.
+ * The Class Query defines the data structure to represent a query. Following types of query are supported:
+ * <ul>
+ * <li>Search: to search data with filter, pagination, sorting and result template.</li>
+ * <li>AddOrUpdate: to add or update a list of entities.</li>
+ * <li>Delete: to delete an entity by its primary key value.</li>
+ * </ul>
  *
  * @author Xianhua Liu
  */
 public class Query {
 
-    /** The query for. */
-    private String queryFor;
+    private Action action;
+    
+    private String entityName;
 
+    /*
+     * Following properties are for Search action
+     */
     /** The pagination. */
     private Pagination pagination;
 
@@ -40,29 +49,47 @@ public class Query {
     /** The result. */
     private Result result;
 
+    /*
+     * Following properties are for addOrUpdate action
+     */
+    private List<Map<String, Object>> data;
+    
+    /*
+     * Following properties are for Delete action
+     */
+    private Object id;
+    
     /**
      * Instantiates a new query.
      */
     public Query() {
     }
 
-    /**
-     * Gets the query for.
-     *
-     * @return the query for
-     */
-    public String getQueryFor() {
-        return queryFor;
+
+
+    public Action getAction() {
+        return action;
     }
 
-    /**
-     * Sets the query for.
-     *
-     * @param queryFor the new query for
-     */
-    public void setQueryFor(final String queryFor) {
-        this.queryFor = queryFor;
+
+
+    public void setAction(final Action action) {
+        this.action = action;
     }
+
+
+
+    public String getEntityName() {
+        return entityName;
+    }
+
+
+
+    public void setEntityName(final String entityName) {
+        this.entityName = entityName;
+    }
+
+
 
     /**
      * Gets the filter.
@@ -135,4 +162,29 @@ public class Query {
     public void setSortBy(final List<SortBy> sortBy) {
         this.sortBy = sortBy;
     }
+
+
+
+    public List<Map<String, Object>> getData() {
+        return data;
+    }
+
+
+
+    public void setData(final List<Map<String, Object>> data) {
+        this.data = data;
+    }
+
+
+
+    public Object getId() {
+        return id;
+    }
+
+
+
+    public void setId(final Object id) {
+        this.id = id;
+    }
+
 }

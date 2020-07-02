@@ -24,13 +24,11 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.json4orm.engine.AddOrUpdateContext;
 import com.json4orm.engine.DatabaseDriver;
 import com.json4orm.engine.QueryBuilder;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
 import com.json4orm.model.query.Pagination;
@@ -51,8 +49,6 @@ import com.json4orm.util.EngineUtil;
  * @author Xianhua Liu
  */
 public class QueryBuilderImpl implements QueryBuilder {
-
-    private static final String VALUE_PLACEHOLDER_PREFIX = ":";
     private DatabaseDriver databaseDriver = DatabaseDriver.H2;
     /** The query. */
     private Query query;
@@ -172,6 +168,19 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     @Override
     public QueryContext build(final Query query) throws Json4ormException {
+        switch (query.getAction()) {
+        case SEARCH:
+            return buildSearch(query);
+        case ADD_OR_UPDATE:
+            return buildAddOrUpdate(query);
+        case DELETE:
+            return buildDelete(query);
+        default:
+            throw new Json4ormException("Not supported action: " + query.getAction());
+        }
+    }
+
+    public QueryContext buildSearch(final Query query) throws Json4ormException {
         // add default pagination if not set
         if (query.getPagination() == null) {
             final Pagination pagination = new Pagination();
@@ -181,8 +190,8 @@ public class QueryBuilderImpl implements QueryBuilder {
         }
         EngineUtil.resetAliasPlaceHolderCounts();
         this.query = query;
-        baseEntity = query.getQueryFor();
-        final String baseAlias = EngineUtil.getAlias(query.getQueryFor());
+        baseEntity = query.getEntityName();
+        final String baseAlias = EngineUtil.getAlias(baseEntity);
         aliasMapForFilter.put(baseEntity, baseAlias);
         aliasMapForResult.put(baseEntity, baseAlias);
 
@@ -256,7 +265,7 @@ public class QueryBuilderImpl implements QueryBuilder {
     public QueryContext getQueryContext() throws Json4ormException {
         final QueryContext queryContext = new QueryContext();
 
-        queryContext.setSql(getQuery());
+        queryContext.setSearchSql(getQuery());
         queryContext.setCountSql(getCountQuery());
         queryContext.setLimitSql(getLimitQuery());
         queryContext.setValues(values);
@@ -799,14 +808,13 @@ public class QueryBuilderImpl implements QueryBuilder {
                 + toAlias + "." + toColumn;
     }
 
-    @Override
-    public AddOrUpdateContext build(final AddOrUpdate addOrUpdate) throws Json4ormException {
-        final AddOrUpdateContext context = new AddOrUpdateContext();
-        context.setAddOrUpdate(addOrUpdate);
-
-        final Entity entity = schema.findEntity(addOrUpdate.getAddOrUpdate());
+    public QueryContext buildAddOrUpdate(final Query query) throws Json4ormException {
+        final QueryContext context = new QueryContext();
+        context.setQuery(query);
+        
+        final Entity entity = schema.findEntity(query.getEntityName());
         if (entity == null) {
-            throw new Json4ormException("Noo entity found for name: " + addOrUpdate.getAddOrUpdate());
+            throw new Json4ormException("No entity found for name: " + query.getEntityName());
         }
         context.setEntity(entity);
         final Property idProperty = entity.getIdProperty();
@@ -857,13 +865,13 @@ public class QueryBuilderImpl implements QueryBuilder {
 
         context.setUpdateSql(sb.toString());
 
-        for (final Map<String, Object> valueMap : addOrUpdate.getData()) {
+        for (final Map<String, Object> valueMap : query.getData()) {
             final List<Object> record = new ArrayList<>();
             final Object primaryKey = convertor.convert(idProperty, valueMap.get(idProperty.getName()));
-            
+
             for (final Property p : properties) {
                 final Object o = valueMap.get(p.getName());
-            
+
                 if (PropertyType.isTypeValid(p.getType()) && !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
                     record.add(convertor.convert(p, o));
                 } else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
@@ -897,6 +905,41 @@ public class QueryBuilderImpl implements QueryBuilder {
             }
         }
 
+        return context;
+    }
+    
+    public QueryContext buildDelete(final Query query) throws Json4ormException {
+        if(query == null) {
+            throw new Json4ormException("Null query");
+        }
+        
+        if(query.getId()==null) {
+            throw new Json4ormException("No id found for delete query.");
+        }
+        
+        final QueryContext context = new QueryContext();
+        context.setQuery(query);
+        
+        final Entity entity = schema.findEntity(query.getEntityName());
+        if (entity == null) {
+            throw new Json4ormException("No entity found for name: " + query.getEntityName());
+        }
+        context.setEntity(entity);
+        final Property idProperty = entity.getIdProperty();
+        if (idProperty == null) {
+            throw new Json4ormException("No ID property defined for entity: " + entity.getName());
+        }
+
+        final StringBuffer sb = new StringBuffer();
+        sb.append("DELETE FROM ");
+        sb.append(entity.getTable());
+        sb.append(" WHERE ");
+        sb.append(idProperty.getColumn());
+        sb.append("=?");
+        
+        context.setDeleteSql(sb.toString());
+        context.setId(convertor.convert(idProperty,query.getId()));
+        
         return context;
     }
 

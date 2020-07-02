@@ -16,7 +16,6 @@
 package com.json4orm.engine;
 
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Query;
 
 /**
@@ -35,6 +34,4 @@ public interface QueryBuilder {
      * @throws Json4ormException when the query is not in valid structure and format
      */
     public QueryContext build(Query query) throws Json4ormException;
-    
-    public AddOrUpdateContext build(AddOrUpdate addOrUpdate) throws Json4ormException;
 }

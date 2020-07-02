@@ -14,14 +14,11 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.json4orm.engine.AddOrUpdateContext;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.factory.impl.FileSystemSchemaFactory;
-import com.json4orm.model.addupdate.AddOrUpdate;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.schema.Schema;
-import com.json4orm.parser.AddOrUpdateParser;
 import com.json4orm.parser.QueryParser;
 
 public class QueryBuilderImplTest {
@@ -48,7 +45,7 @@ public class QueryBuilderImplTest {
         builder.setConvertor(new ValueConvertorImpl());
         final QueryContext result = builder.build(q);
 
-        System.out.println(result.getSql());
+        System.out.println(result.getSearchSql());
         int index = 1;
         for (final Object v : result.getValues()) {
             System.out.println((index++) + ": " + v.toString());
@@ -62,8 +59,8 @@ public class QueryBuilderImplTest {
         mapper.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 
         final InputStream in = this.getClass().getClassLoader().getResourceAsStream("query/class-add-update.json");
-        final AddOrUpdateParser parser = new AddOrUpdateParser();
-        final AddOrUpdate q;
+        final QueryParser parser = new QueryParser();
+        final Query q;
         try {
             q = parser.parse(in);
         } finally {
@@ -76,7 +73,7 @@ public class QueryBuilderImplTest {
 
         final QueryBuilderImpl builder = new QueryBuilderImpl(schema);
         builder.setConvertor(new ValueConvertorImpl());
-        final AddOrUpdateContext result = builder.build(q);
+        final QueryContext result = builder.build(q);
 
         System.out.println("------------ Insert ------------");
         System.out.println(result.getInsertSql());

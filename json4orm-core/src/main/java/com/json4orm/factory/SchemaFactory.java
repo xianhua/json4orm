@@ -22,12 +22,13 @@ import com.json4orm.model.schema.Schema;
  * A factory for creating Schema objects.
  */
 public interface SchemaFactory {
-    
+
     /**
      * Creates a new Schema object.
      *
      * @return the schema
-     * @throws Json4ormException
+     * @throws Json4ormException when the schema failed the validation, such invalid
+     *                           or missing properties and entities
      */
     public Schema createSchema() throws Json4ormException;
 }

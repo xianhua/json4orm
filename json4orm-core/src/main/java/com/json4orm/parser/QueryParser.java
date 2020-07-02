@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.query.Action;
 import com.json4orm.model.query.Filter;
 import com.json4orm.model.query.FilterOperator;
 import com.json4orm.model.query.Pagination;
@@ -44,7 +45,7 @@ import com.json4orm.util.EngineUtil;
  *
  * @author Xianhua Liu
  */
-public class QueryParser implements Parser<Query> {
+public class QueryParser implements Parser {
 
     /** The Constant OBJ_MAPPER. */
     private static final ObjectMapper OBJ_MAPPER;
@@ -123,19 +124,34 @@ public class QueryParser implements Parser<Query> {
     @Override
     public Query parse(final Map<String, Object> jsonMap) throws Json4ormException {
         final Query query = new Query();
-        // get query target
-        String queryFor = (String) jsonMap.get(Constants.QUERY);
-        if (StringUtils.isBlank(queryFor)) {
-            queryFor = (String) jsonMap.get(Constants.QUERY_FOR);
-            if (StringUtils.isBlank(queryFor)) {
-                throw new Json4ormException("No query specified.");
-            }
+        // get action
+        final Action action = getAction(jsonMap);
+        if (action == Action.UNKNOWN) {
+            throw new Json4ormException("Invalid or no action found.");
         }
-        query.setQueryFor(queryFor);
-        query.setFilter(generateFilter(jsonMap.get(Constants.FILTER)));
-        query.setPagination(generatePagination(jsonMap.get(Constants.PAGINATION)));
-        query.setSortBy(generateSortBy(jsonMap.get(Constants.SORT_BY)));
-        query.setResult(generateResult(jsonMap.get(Constants.RESULT), null));
+        query.setAction(action);
+
+        // get entity name
+        final String entityName = getEntityName(jsonMap);
+        if (StringUtils.isBlank(entityName)) {
+            throw new Json4ormException("No entity name found.");
+        }
+        query.setEntityName(entityName);
+        switch (action) {
+        case SEARCH:
+            query.setFilter(generateFilter(jsonMap.get(Constants.FILTER)));
+            query.setPagination(generatePagination(jsonMap.get(Constants.PAGINATION)));
+            query.setSortBy(generateSortBy(jsonMap.get(Constants.SORT_BY)));
+            query.setResult(generateResult(jsonMap.get(Constants.RESULT), null));
+            break;
+        case ADD_OR_UPDATE:
+            query.setData((List<Map<String, Object>>) jsonMap.get(Constants.DATA));
+            break;
+        case DELETE:
+            query.setId(jsonMap.get(Constants.ID));
+        default:
+            break;
+        }
         return query;
     }
 
@@ -384,5 +400,32 @@ public class QueryParser implements Parser<Query> {
         }
 
         return result;
+    }
+
+    private Action getAction(final Map<String, Object> jsonMap) {
+        if (jsonMap.get(Constants.QUERY_FOR) != null || jsonMap.get(Constants.QUERY) != null
+                || jsonMap.get(Constants.SEARCH) != null) {
+            return Action.SEARCH;
+        } else if (jsonMap.get(Constants.ADD_OR_UPDATE) != null) {
+            return Action.ADD_OR_UPDATE;
+        } else if (jsonMap.get(Constants.DELETE) != null) {
+            return Action.DELETE;
+        }
+        return Action.UNKNOWN;
+    }
+
+    private String getEntityName(final Map<String, Object> jsonMap) {
+        if (jsonMap.get(Constants.QUERY_FOR) != null) {
+            return (String) jsonMap.get(Constants.QUERY_FOR);
+        } else if (jsonMap.get(Constants.QUERY) != null) {
+            return (String) jsonMap.get(Constants.QUERY);
+        } else if (jsonMap.get(Constants.SEARCH) != null) {
+            return (String) jsonMap.get(Constants.SEARCH);
+        } else if (jsonMap.get(Constants.ADD_OR_UPDATE) != null) {
+            return (String) jsonMap.get(Constants.ADD_OR_UPDATE);
+        } else if (jsonMap.get(Constants.DELETE) != null) {
+            return (String) jsonMap.get(Constants.DELETE);
+        }
+        return null;
     }
 }
