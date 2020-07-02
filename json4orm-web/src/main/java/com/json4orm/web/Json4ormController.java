@@ -77,9 +77,8 @@ public class Json4ormController {
      * @throws Json4ormException the json 4 orm exception
      */
     @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Response> executeNormalized(@RequestBody final Map<String, Object> request)
+    public ResponseEntity<Response> executeNormalized(@RequestBody final Query query)
             throws Json4ormException {
-        final Query query = queryParser.parse(request);
         return executeQuery(query);
     }
 

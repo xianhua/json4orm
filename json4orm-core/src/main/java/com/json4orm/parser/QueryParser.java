@@ -54,13 +54,6 @@ public class QueryParser implements Parser {
         OBJ_MAPPER.configure(Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     }
 
-    /**
-     * Parses the.
-     *
-     * @param inputStream the input stream
-     * @return the query
-     * @throws Json4ormException the json 4 orm exception
-     */
     @Override
     public Query parse(final InputStream inputStream) throws Json4ormException {
         Map<String, Object> jsonMap = null;
@@ -73,13 +66,6 @@ public class QueryParser implements Parser {
         return parse(jsonMap);
     }
 
-    /**
-     * Parses the.
-     *
-     * @param queryFile the query file
-     * @return the query
-     * @throws Json4ormException the json 4 orm exception
-     */
     @Override
     public Query parse(final File queryFile) throws Json4ormException {
         Map<String, Object> jsonMap = null;
@@ -93,13 +79,6 @@ public class QueryParser implements Parser {
         return parse(jsonMap);
     }
 
-    /**
-     * Parses the.
-     *
-     * @param queryString the query string
-     * @return the query
-     * @throws Json4ormException the json 4 orm exception
-     */
     @Override
     public Query parse(final String queryString) throws Json4ormException {
 
@@ -114,13 +93,6 @@ public class QueryParser implements Parser {
 
     }
 
-    /**
-     * Parses the.
-     *
-     * @param jsonMap the json map
-     * @return the query
-     * @throws Json4ormException the json 4 orm exception
-     */
     @Override
     public Query parse(final Map<String, Object> jsonMap) throws Json4ormException {
         final Query query = new Query();
