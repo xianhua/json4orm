@@ -1,0 +1,42 @@
+{
+  name: "Teacher",
+  table: "teacher",
+  properties: [
+    {
+      name: "teacherId",
+      type: "ID",
+      column: "teacher_id"
+    },
+    {
+      name: "firstName",
+      type: "string",
+      column: "first_name"
+    },
+    {
+      name: "lastName",
+      type: "string",
+      column: "last_name"
+    },
+    {
+      name: "middleName",
+      type: "string",
+      column: "middle_name"
+    },
+    {
+      name: "birthDate",
+      type: "date",
+      column: "birth_date"
+    },
+    {
+      name: "createdAt",
+      type: "timestamp",
+      column: "created_at"
+    },
+    {
+      name: "classTeachers",
+      type: "list",
+      itemType: "ClassTeacher",
+      column: "teacher_id"
+    }
+  ]
+}

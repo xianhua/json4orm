@@ -121,7 +121,8 @@
 	</dependencies>
 	<modules>
 		<module>json4orm-core</module>
-		<module>json4orm-web</module>	
+		<module>json4orm-codegen</module>
+		<module>json4orm-web</module>
 	</modules>
 	<build>
 		<plugins>

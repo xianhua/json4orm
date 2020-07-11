@@ -67,6 +67,7 @@ public class Property {
     
     private String sequenceName;
     
+    private boolean required = false;
     /**
      * Gets the name.
      *
@@ -185,6 +186,14 @@ public class Property {
     public void setSequenceName(final String sequenceName) {
         this.sequenceName = sequenceName;
     }
+
+	public boolean isRequired() {
+		return required;
+	}
+
+	public void setRequired(boolean required) {
+		this.required = required;
+	}
 
     
 }
