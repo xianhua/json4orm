@@ -132,9 +132,10 @@ public class AngularCodeGenerator {
 		sbForm.append(System.lineSeparator());
 		sbForm.append(System.lineSeparator());
 		sbForm.append(System.lineSeparator());
-		sbForm.append(TAB + "submitForm() {");
+		sbForm.append(createSubmitFormFunction(entity));
 		sbForm.append(System.lineSeparator());
-		sbForm.append(TAB + "}");
+		sbForm.append(System.lineSeparator());
+		sbForm.append(createProcessDataFunction(entity));
 		sbForm.append(System.lineSeparator());
 		sbForm.append(System.lineSeparator());
 		sbForm.append(TAB + "resetForm() {");
@@ -151,6 +152,49 @@ public class AngularCodeGenerator {
 		sbForm.append(System.lineSeparator());
 		saveFile(entity.getName() + "_form.ts", sbForm.toString());
 
+	}
+
+	private String createSubmitFormFunction(Entity entity) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(TAB + "submitForm() {");
+		sb.append(System.lineSeparator());
+		String varName = entity.getName().toLowerCase();
+		sb.append(TAB + "let " + varName + " = <" + entity.getName() + ">{}");
+		sb.append(System.lineSeparator());
+		for (Property p : entity.getProperties()) {
+			if (PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())
+					|| PropertyType.PTY_ID.equalsIgnoreCase(p.getType())) {
+				continue;
+			}
+			sb.append(TAB + varName + "." + p.getName() + " = this." + varName + "FormGroup.get('" + p.getName()
+					+ "').value;");
+			sb.append(System.lineSeparator());
+		}
+		sb.append(System.lineSeparator());
+		sb.append(TAB + "this." + varName + "Service.add" + entity.getName() + "(" + varName
+				+ ").subscribe((data: QueryResponse<" + entity.getName() + ">) => this.processData(data));");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + "}");
+
+		return sb.toString();
+	}
+
+	private String createProcessDataFunction(Entity entity) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(TAB + "processData(data: QueryResponse<" + entity.getName() + ">) : void {");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + TAB + "if(data.status === 'SUCCESS'){");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + TAB + TAB + "console.log('Successfully registered.');");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + TAB + "    }else{");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + TAB + TAB + "console.log('Failed with error: ' + data.error);");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + TAB + "}");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + "}");
+		return sb.toString();
 	}
 
 	private void addFormControl(Property property, StringBuffer sbForm) {
@@ -171,7 +215,8 @@ public class AngularCodeGenerator {
 		}
 		sbHtml.append(TAB + "<div class=\"form-field" + (property.isRequired() ? " required" : "") + "\">");
 		sbHtml.append(System.lineSeparator());
-		sbHtml.append(TAB + "<label for=\"" + property.getName() + "\">" + decamelcase(property.getName()) + ": </label>");
+		sbHtml.append(
+				TAB + "<label for=\"" + property.getName() + "\">" + decamelcase(property.getName()) + ": </label>");
 		sbHtml.append(System.lineSeparator());
 		if (inputType.equalsIgnoreCase("radio")) {
 			sbHtml.append(TAB + "<input type=\"radio\" name=\"" + property.getName() + "\" formControlName=\""
@@ -180,21 +225,22 @@ public class AngularCodeGenerator {
 			sbHtml.append(TAB + "<input type=\"radio\" name=\"" + property.getName() + "\" formControlName=\""
 					+ property.getName() + "\" [value]=\"false\" />No");
 		} else {
-			sbHtml.append(TAB + "<input type=\""+inputType+"\" name=\"" + property.getName() + "\" formControlName=\""
-					+ property.getName() + "\"" + (property.isRequired() ? " required" : "") + " />");
+			sbHtml.append(
+					TAB + "<input type=\"" + inputType + "\" name=\"" + property.getName() + "\" formControlName=\""
+							+ property.getName() + "\"" + (property.isRequired() ? " required" : "") + " />");
 		}
 		sbHtml.append(System.lineSeparator());
 		sbHtml.append(TAB + "</div>");
 	}
 
-	public static String decamelcase(String s){
-	    List<String> result = new ArrayList<>();	
-	    for (String w : s.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")) {
-	    	result.add(w);
-	    }    
-	    return StringUtils.join(result, " ");
+	public static String decamelcase(String s) {
+		List<String> result = new ArrayList<>();
+		for (String w : s.split("(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])")) {
+			result.add(w);
+		}
+		return StringUtils.join(result, " ");
 	}
-	
+
 	private String getInputType(Property property) {
 		switch (property.getType()) {
 		case PropertyType.PTY_BOOLEAN:
