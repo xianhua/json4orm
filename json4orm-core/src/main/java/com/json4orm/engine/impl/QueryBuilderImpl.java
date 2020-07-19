@@ -581,13 +581,13 @@ public class QueryBuilderImpl implements QueryBuilder {
             final String column = property.getColumn();
             if (FilterOperator.EQUAL.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " = ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
                 whereForFilter.append("LOWER(" + alias + "." + column + ") = ?");
                 values.add(((String) filter.getValue()).toLowerCase());
             } else if (FilterOperator.NOT_EQUAL.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " != ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.NOT_EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
                 whereForFilter.append("LOWER(" + alias + "." + column + ") != ?");
                 values.add(((String) filter.getValue()).toLowerCase());
@@ -629,16 +629,16 @@ public class QueryBuilderImpl implements QueryBuilder {
                 values.add(((String) filter.getValue()).toLowerCase() + "%");
             } else if (FilterOperator.GREATER_THAN.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " > ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.LESS_THAN.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " < ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.NOT_GREATER_THAN.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " = <= ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.NOT_LESS_THAN.equalsIgnoreCase(operator)) {
                 whereForFilter.append(alias + "." + column + " >= ?");
-                values.add(convertor.convert(property, filter.getValue()));
+                values.add(convertor.convertToDB(property, filter.getValue()));
             } else if (FilterOperator.IN.equalsIgnoreCase(operator)) {
                 handleFilterWithListValues(whereForFilter, values, alias, property, "IN", filter.getValue());
             } else if (FilterOperator.NOT_IN.equalsIgnoreCase(operator)) {
@@ -671,11 +671,11 @@ public class QueryBuilderImpl implements QueryBuilder {
             throw new Json4ormException("At least one value is expected in the list for operator: IN");
         }
         buf.append(alias + "." + property.getColumn() + " " + operator + "(?");
-        values.add(convertor.convert(property, list.get(0)));
+        values.add(convertor.convertToDB(property, list.get(0)));
 
         for (int i = 1; i < list.size(); i++) {
             buf.append(",?");
-            values.add(convertor.convert(property, list.get(i)));
+            values.add(convertor.convertToDB(property, list.get(i)));
         }
 
         buf.append(")");
@@ -867,13 +867,13 @@ public class QueryBuilderImpl implements QueryBuilder {
 
         for (final Map<String, Object> valueMap : query.getData()) {
             final List<Object> record = new ArrayList<>();
-            final Object primaryKey = convertor.convert(idProperty, valueMap.get(idProperty.getName()));
+            final Object primaryKey = convertor.convertToDB(idProperty, valueMap.get(idProperty.getName()));
 
             for (final Property p : properties) {
                 final Object o = valueMap.get(p.getName());
 
                 if (PropertyType.isTypeValid(p.getType()) && !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
-                    record.add(convertor.convert(p, o));
+                    record.add(convertor.convertToDB(p, o));
                 } else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
 
                     if (o != null && o instanceof Map) {
@@ -892,7 +892,7 @@ public class QueryBuilderImpl implements QueryBuilder {
                             throw new Json4ormException(
                                     "No ID value defined for entity: " + p.getName() + " in " + entity.getName());
                         }
-                        record.add(convertor.convert(idp, associatedEntityValues.get(idp.getName())));
+                        record.add(convertor.convertToDB(idp, associatedEntityValues.get(idp.getName())));
                     }
                 }
             }
@@ -938,7 +938,7 @@ public class QueryBuilderImpl implements QueryBuilder {
         sb.append("=?");
         
         context.setDeleteSql(sb.toString());
-        context.setId(convertor.convert(idProperty,query.getId()));
+        context.setId(convertor.convertToDB(idProperty,query.getId()));
         
         return context;
     }

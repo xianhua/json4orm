@@ -27,9 +27,11 @@ import com.json4orm.db.Record2JsonUtil;
 import com.json4orm.db.RecordBuilder;
 import com.json4orm.engine.DatabaseDriver;
 import com.json4orm.engine.QueryContext;
+import com.json4orm.engine.ValueConvertor;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
 
 /**
  * The Class RecordBuilderImpl implements function to build record from data
@@ -38,6 +40,7 @@ import com.json4orm.model.schema.Entity;
  * @author Xianhua Liu
  */
 public class RecordBuilderImpl implements RecordBuilder {
+	ValueConvertor valueConvertor;
 
     /** The records. */
     private final List<Record> records = new ArrayList<>();
@@ -140,6 +143,8 @@ public class RecordBuilderImpl implements RecordBuilder {
         final Map<String, Object> values = new LinkedHashMap<>();
 
         final String alias = result.getAlias();
+        final Entity entity = result.getEntityObj();
+        
         final List<String> properties = result.getProperties();
         if (properties != null && !properties.isEmpty()) {
             for (final String property : properties) {
@@ -149,14 +154,15 @@ public class RecordBuilderImpl implements RecordBuilder {
                     throw new Json4ormException("No field found for: " + fieldName);
                 }
                 try {
-                    values.put(property, rs.getObject(index));
+                	Property p = entity.getProperty(property);
+                    values.put(property, valueConvertor.convertFromDB(p, rs.getObject(index)));
                 } catch (final SQLException e) {
                     throw new Json4ormException("Failed to retrieve value for: " + fieldName, e);
                 }
             }
         }
 
-        final Entity entity = result.getEntityObj();
+        
         final Record record = new Record(entity, values);
         return record;
     }
@@ -176,4 +182,16 @@ public class RecordBuilderImpl implements RecordBuilder {
 
         return null;
     }
+
+
+	public ValueConvertor getValueConvertor() {
+		return valueConvertor;
+	}
+
+
+	public void setValueConvertor(ValueConvertor valueConvertor) {
+		this.valueConvertor = valueConvertor;
+	}
+    
+    
 }

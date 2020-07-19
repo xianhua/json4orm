@@ -1,6 +1,5 @@
 package com.json4orm.codegen;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +12,8 @@ import com.json4orm.model.schema.Property;
 import com.json4orm.model.schema.PropertyType;
 import com.json4orm.model.schema.Schema;
 
-public class AngularCodeGenerator {
-	Schema schema;
-	String saveToFolder;
-	private static final String TAB = "   ";
+public class AngularCodeGenerator extends AbstractCodeGenerator {
+	
 
 	public void generateModels() throws IOException {
 		StringBuffer sb = new StringBuffer();
@@ -288,18 +285,5 @@ public class AngularCodeGenerator {
 
 	public void setSaveToFolder(String saveToFolder) {
 		this.saveToFolder = saveToFolder;
-	}
-
-	private void saveFile(String fileName, String fileContent) throws IOException {
-		FileWriter fw = null;
-		try {
-			fw = new FileWriter(saveToFolder + fileName);
-			fw.write(fileContent);
-
-		} finally {
-			if (fw != null) {
-				fw.close();
-			}
-		}
 	}
 }
