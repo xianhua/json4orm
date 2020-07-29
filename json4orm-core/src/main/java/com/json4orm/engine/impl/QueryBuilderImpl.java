@@ -171,6 +171,8 @@ public class QueryBuilderImpl implements QueryBuilder {
         switch (query.getAction()) {
         case SEARCH:
             return buildSearch(query);
+        case ADD:
+        case UPDATE:
         case ADD_OR_UPDATE:
             return buildAddOrUpdate(query);
         case DELETE:
@@ -853,6 +855,11 @@ public class QueryBuilderImpl implements QueryBuilder {
         sb.append(" ) values (");
         sb.append(StringUtils.join(valuePlaceHolders, ","));
         sb.append(" )");
+        
+        if(DatabaseDriver.POSTGRESQL.equals(databaseDriver) ) {
+        	sb.append( "RETURNING " + idProperty.getColumn() );
+        }
+        
         context.setInsertSql(sb.toString());
 
         sb.delete(0, sb.length());
@@ -899,9 +906,11 @@ public class QueryBuilderImpl implements QueryBuilder {
 
             if (primaryKey == null) {
                 context.addInsertRecord(record);
+                context.addInsertData(valueMap);
             } else {
                 record.add(primaryKey);
                 context.addUpdateRecord(record);
+                context.addUpdateData(valueMap);
             }
         }
 

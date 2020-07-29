@@ -22,6 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -180,6 +181,8 @@ public class QueryExecutorImpl implements QueryExecutor {
 		switch (query.getAction()) {
 		case SEARCH:
 			return executeSearch(queryContext);
+		case ADD:
+		case UPDATE:
 		case ADD_OR_UPDATE:
 			return executeAddOrUpdate(queryContext);
 		case DELETE:
@@ -307,11 +310,11 @@ public class QueryExecutorImpl implements QueryExecutor {
 
 	public QueryResult executeAddOrUpdate(final QueryContext queryContext) throws Json4ormException {
 		final QueryResult result = new QueryResult();
-
 		Connection conn = null;
 		PreparedStatement psInsert = null;
 		PreparedStatement psUpdate = null;
 		int total = 0;
+		List<Map<String, Object>> records = new ArrayList<>();
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
@@ -319,11 +322,21 @@ public class QueryExecutorImpl implements QueryExecutor {
 			LOG.debug("Insert query for records: " + queryContext.getInsertRecords().size());
 			LOG.debug("Executing insert query: " + queryContext.getInsertSql());
 			psInsert = conn.prepareStatement(queryContext.getInsertSql());
-			for (final List<Object> record : queryContext.getInsertRecords()) {
+			int n= queryContext.getInsertRecords().size();
+			for (int k=0; k<n ;k++) {
+				List<Object> record = queryContext.getInsertRecords().get(k);
 				for (int i = 0; i < record.size(); i++) {
 					psInsert.setObject(i + 1, record.get(i));
 				}
-				psInsert.executeUpdate();
+				ResultSet rs= psInsert.executeQuery();
+				Map<String, Object> data = queryContext.getInsertData().get(k);
+				   
+				if(rs.next()) {
+				   int id = rs.getInt(1);
+				   data.put(queryContext.getEntity().getIdProperty().getName(), id);
+				}
+				
+				records.add(data);
 				total++;
 			}
 			psInsert.close();
@@ -344,6 +357,9 @@ public class QueryExecutorImpl implements QueryExecutor {
 			conn.commit();
 			LOG.debug("Finished query.");
 			result.setTotal(total);
+			//add updated records
+			records.addAll(queryContext.getUpdateData());
+			result.setRecords(records);
 			return result;
 		} catch (final SQLException e) {
 			if (conn != null) {

@@ -17,6 +17,7 @@ package com.json4orm.engine;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.json4orm.model.query.Action;
 import com.json4orm.model.query.Query;
@@ -69,6 +70,11 @@ public class QueryContext {
     
     /** The update records. */
     private final List<List<Object>> updateRecords = new ArrayList<>();
+    
+    private final List<Map<String, Object>> insertData = new ArrayList<>();
+    
+    /** The update records. */
+    private final List<Map<String, Object>> updateData = new ArrayList<>();
     
     /** The id. */
     private Object id;
@@ -271,7 +277,25 @@ public class QueryContext {
         this.updateRecords.add(record);
     }
     
+    public void addInsertData(final Map<String, Object> record) {
+        this.insertData.add(record);
+    }
+    
+    public void addUpdateData(final Map<String, Object> record) {
+        this.updateData.add(record);
+    }
+    
     public Action getAction() {
         return query.getAction();
     }
+
+	public List<Map<String, Object>> getInsertData() {
+		return insertData;
+	}
+
+	public List<Map<String, Object>> getUpdateData() {
+		return updateData;
+	}
+    
+    
 }

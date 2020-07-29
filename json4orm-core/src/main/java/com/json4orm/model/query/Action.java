@@ -4,6 +4,8 @@ public enum Action {
     SEARCH("search"),
     ADD_OR_UPDATE("addOrUpdate"),
     DELETE("delete"),
+    ADD("add"),
+    UPDATE("update"),
     UNKNOWN("unknown");
     
     private String actionName;
