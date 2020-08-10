@@ -36,6 +36,8 @@ import com.json4orm.engine.impl.QueryBuilderImpl;
 import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Query;
+import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.Property;
 import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 
@@ -63,7 +65,7 @@ public class QueryExecutorImpl implements QueryExecutor {
 
 	/** The value convertor. */
 	private ValueConvertor valueConvertor;
-	
+
 	/**
 	 * Gets the db url.
 	 *
@@ -311,55 +313,19 @@ public class QueryExecutorImpl implements QueryExecutor {
 	public QueryResult executeAddOrUpdate(final QueryContext queryContext) throws Json4ormException {
 		final QueryResult result = new QueryResult();
 		Connection conn = null;
-		PreparedStatement psInsert = null;
-		PreparedStatement psUpdate = null;
-		int total = 0;
+
 		List<Map<String, Object>> records = new ArrayList<>();
 		try {
 			conn = getConnection();
 			conn.setAutoCommit(false);
-			// execute insert query
-			LOG.debug("Insert query for records: " + queryContext.getInsertRecords().size());
-			LOG.debug("Executing insert query: " + queryContext.getInsertSql());
-			psInsert = conn.prepareStatement(queryContext.getInsertSql());
-			int n= queryContext.getInsertRecords().size();
-			for (int k=0; k<n ;k++) {
-				List<Object> record = queryContext.getInsertRecords().get(k);
-				for (int i = 0; i < record.size(); i++) {
-					psInsert.setObject(i + 1, record.get(i));
-				}
-				ResultSet rs= psInsert.executeQuery();
-				Map<String, Object> data = queryContext.getInsertData().get(k);
-				   
-				if(rs.next()) {
-				   int id = rs.getInt(1);
-				   data.put(queryContext.getEntity().getIdProperty().getName(), id);
-				}
-				
-				records.add(data);
-				total++;
-			}
-			psInsert.close();
-
-			// execute update query
-			LOG.debug("Update query for records: " + queryContext.getUpdateRecords().size());
-			LOG.debug("Executing update query: " + queryContext.getUpdateSql());
-			psUpdate = conn.prepareStatement(queryContext.getUpdateSql());
-			for (final List<Object> record : queryContext.getUpdateRecords()) {
-				for (int i = 0; i < record.size(); i++) {
-					psUpdate.setObject(i + 1, record.get(i));
-				}
-				psUpdate.executeUpdate();
-				total++;
-			}
-			psUpdate.close();
-
+			// add execute context
+			executeAddOrUpdateContext(queryContext, conn);
 			conn.commit();
 			LOG.debug("Finished query.");
-			result.setTotal(total);
-			//add updated records
+			records.addAll(queryContext.getInsertData());
 			records.addAll(queryContext.getUpdateData());
 			result.setRecords(records);
+			result.setTotal(records.size());
 			return result;
 		} catch (final SQLException e) {
 			if (conn != null) {
@@ -374,13 +340,7 @@ public class QueryExecutorImpl implements QueryExecutor {
 			throw new Json4ormException(e);
 		} finally {
 			try {
-				if (psInsert != null) {
-					psInsert.close();
-				}
 
-				if (psUpdate != null) {
-					psUpdate.close();
-				}
 				if (conn != null) {
 					conn.close();
 				}
@@ -391,4 +351,73 @@ public class QueryExecutorImpl implements QueryExecutor {
 		}
 	}
 
+	private void executeAddOrUpdateContext(final QueryContext queryContext, final Connection conn) throws SQLException {
+		PreparedStatement psInsert = null;
+		PreparedStatement psUpdate = null;
+
+		try {
+			// execute insert query
+			LOG.debug("Insert query for records: " + queryContext.getInsertRecords().size());
+			LOG.debug("Executing insert query: " + queryContext.getInsertSql());
+			psInsert = conn.prepareStatement(queryContext.getInsertSql());
+			int n = queryContext.getInsertRecords().size();
+			for (int k = 0; k < n; k++) {
+				List<Object> record = queryContext.getInsertRecords().get(k);
+				for (int i = 0; i < record.size(); i++) {
+					Object value = record.get(i);
+					if (value != null && value instanceof String) {
+						String s = (String) value;
+						if (s.contains(Constants.PLACEHOLDER_PARENT_ID)) {
+							String parentEntityName = s.substring(Constants.PLACEHOLDER_PARENT_ID.length());
+							Entity parentEntity = queryContext.getSchema().getEntity(parentEntityName);
+							if (parentEntity == null) {
+								throw new IllegalArgumentException("No entity found as parent: " + parentEntityName);
+							}
+
+							Property idProperty = parentEntity.getIdProperty();
+							// replace with parent id
+							if (queryContext.getParentRecord() != null) {
+								value = queryContext.getParentRecord().get(idProperty.getName());
+								record.set(i, value);
+							}
+						}
+					}
+					psInsert.setObject(i + 1, value);
+				}
+				ResultSet rs = psInsert.executeQuery();
+				Map<String, Object> data = queryContext.getInsertData().get(k);
+
+				if (rs.next()) {
+					int id = rs.getInt(1);
+					data.put(queryContext.getEntity().getIdProperty().getName(), id);
+				}
+			}
+
+			// execute update query
+			LOG.debug("Update query for records: " + queryContext.getUpdateRecords().size());
+			LOG.debug("Executing update query: " + queryContext.getUpdateSql());
+			psUpdate = conn.prepareStatement(queryContext.getUpdateSql());
+			for (final List<Object> record : queryContext.getUpdateRecords()) {
+				for (int i = 0; i < record.size(); i++) {
+					psUpdate.setObject(i + 1, record.get(i));
+				}
+				psUpdate.executeUpdate();
+			}
+
+			// execute children context
+			if (queryContext.getChildren() != null) {
+				for (QueryContext childContext : queryContext.getChildren()) {
+					executeAddOrUpdateContext(childContext, conn);
+				}
+			}
+		} finally {
+			if (psInsert != null) {
+				psInsert.close();
+			}
+
+			if (psUpdate != null) {
+				psUpdate.close();
+			}
+		}
+	}
 }
