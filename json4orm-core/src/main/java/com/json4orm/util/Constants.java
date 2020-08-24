@@ -82,5 +82,8 @@ public final class Constants {
     
     public static final String ID = "id";
     
+    public static final String ALL_PROPERTIES = "*";
+    
+    public static final String PLACEHOLDER_PARENT_ID = "PARENT_ID_FOR_";
 
 }

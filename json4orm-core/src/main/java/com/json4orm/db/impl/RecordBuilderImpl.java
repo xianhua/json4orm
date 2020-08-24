@@ -18,6 +18,7 @@ package com.json4orm.db.impl;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.schema.Entity;
 import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.PropertyType;
 
 /**
  * The Class RecordBuilderImpl implements function to build record from data
@@ -155,7 +157,21 @@ public class RecordBuilderImpl implements RecordBuilder {
                 }
                 try {
                 	Property p = entity.getProperty(property);
-                    values.put(property, valueConvertor.convertFromDB(p, rs.getObject(index)));
+                	if(!PropertyType.isTypeValid(p.getType())) {
+                		//it is object type
+                		Entity propEntity = context.getSchema().getEntity(p.getType());
+                		if(propEntity == null) {
+                			throw new Json4ormException("Invalid property type: " + p.getType());
+                		}
+                		
+                		Property idProp = propEntity.getIdProperty();
+                		
+                		Map<String, Object> entityValue = new HashMap<>();
+                		entityValue.put(idProp.getName(), valueConvertor.convertFromDB(idProp, rs.getObject(index)));
+                		values.put(property, entityValue);
+                	}else {
+                        values.put(property, valueConvertor.convertFromDB(p, rs.getObject(index)));
+                	}
                 } catch (final SQLException e) {
                     throw new Json4ormException("Failed to retrieve value for: " + fieldName, e);
                 }

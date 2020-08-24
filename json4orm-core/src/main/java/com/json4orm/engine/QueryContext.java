@@ -79,7 +79,9 @@ public class QueryContext {
     /** The id. */
     private Object id;
     
-
+    List<QueryContext> children = new ArrayList<>(); 
+    Map<String, Object> parentRecord;
+    
     /**
      * Gets the SQL string for querying data.
      *
@@ -296,6 +298,24 @@ public class QueryContext {
 	public List<Map<String, Object>> getUpdateData() {
 		return updateData;
 	}
+
+	public List<QueryContext> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<QueryContext> children) {
+		this.children = children;
+	}
     
-    
+    public void addChildren(QueryContext context) {
+    	this.children.add(context);
+    }
+
+	public Map<String, Object> getParentRecord() {
+		return parentRecord;
+	}
+
+	public void setParentRecord(Map<String, Object> parentRecord) {
+		this.parentRecord = parentRecord;
+	}
 }
