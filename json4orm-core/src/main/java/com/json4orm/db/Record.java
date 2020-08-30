@@ -185,7 +185,8 @@ public class Record {
             final Property p = entity.getPropertyByColumn(idProperty.getColumn());
             final Object obj1 = this.getValuesMap().get(p.getName());
             final Object obj2 = record.getValuesMap().get(p.getName());
-            if (!obj1.equals(obj2)) {
+
+            if (obj1==null || obj2== null || !obj1.equals(obj2)) {
                 return false;
             }
         } else if (!EngineUtil.isEmpty(idProperty.getColumns())) {
@@ -193,7 +194,7 @@ public class Record {
                 final Property p = entity.getPropertyByColumn(idColumn);
                 final Object obj1 = this.getValuesMap().get(p.getName());
                 final Object obj2 = record.getValuesMap().get(p.getName());
-                if (!obj1.equals(obj2)) {
+                if (obj1==null || obj2== null || !obj1.equals(obj2)) {
                     return false;
                 }
             }

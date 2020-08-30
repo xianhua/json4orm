@@ -56,7 +56,7 @@ public class AngularCodeGenerator extends AbstractCodeGenerator {
 					if (ent != null) {
 						sb.append(ent.getName());
 					} else {
-						throw new IllegalArgumentException("No entity found for name: " + p.getType());
+						throw new IllegalArgumentException(entity.getName() + "." + p.getName() + ": entity found for name: " + p.getType());
 					}
 				}
 

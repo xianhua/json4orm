@@ -23,6 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.json4orm.db.Record;
 import com.json4orm.db.Record2JsonUtil;
 import com.json4orm.db.RecordBuilder;
@@ -44,170 +46,185 @@ import com.json4orm.model.schema.PropertyType;
 public class RecordBuilderImpl implements RecordBuilder {
 	ValueConvertor valueConvertor;
 
-    /** The records. */
-    private final List<Record> records = new ArrayList<>();
-
-    /**
-     * Gets the records.
-     *
-     * @return the records
-     */
-    public List<Record> getRecords() {
-        return records;
-    }
-
+	/** The records. */
+	private final List<Record> records = new ArrayList<>();
 
 	/**
-     * Builds the record.
-     *
-     * @param rs      the rs
-     * @param context the context
-     * @return the list
-     * @throws Json4ormException the json 4 orm exception
-     */
-    @Override
-    public List<Map<String, Object>> buildRecord(final ResultSet rs, final QueryContext context)
-            throws Json4ormException {
-        if (rs == null) {
-            return null;
-        }
+	 * Gets the records.
+	 *
+	 * @return the records
+	 */
+	public List<Record> getRecords() {
+		return records;
+	}
 
-        try {
-            while (rs.next()) {
-                buildTopLevelRecord(rs, context.getQuery().getResult(), context);
-            }
-        } catch (final SQLException e) {
-            throw new Json4ormException("Failed to build records.", e);
-        }
+	/**
+	 * Builds the record.
+	 *
+	 * @param rs      the rs
+	 * @param context the context
+	 * @return the list
+	 * @throws Json4ormException the json 4 orm exception
+	 */
+	@Override
+	public List<Map<String, Object>> buildRecord(final ResultSet rs, final QueryContext context)
+			throws Json4ormException {
+		if (rs == null) {
+			return null;
+		}
 
-        return Record2JsonUtil.toJsonObject(getRecords());
-    }
+		try {
+			while (rs.next()) {
+				buildTopLevelRecord(rs, context.getQuery().getResult(), context);
+			}
+		} catch (final SQLException e) {
+			throw new Json4ormException("Failed to build records.", e);
+		}
 
-    /**
-     * Builds the top level record.
-     *
-     * @param rs      the rs
-     * @param result  the result
-     * @param context the context
-     * @throws Json4ormException the json 4 orm exception
-     */
-    private void buildTopLevelRecord(final ResultSet rs, final Result result, final QueryContext context)
-            throws Json4ormException {
-        Record record = retrieveValues(rs, result, context);
-        final Record existingRecord = findRecord(record);
-        if (existingRecord == null) {
-            records.add(record);
-        } else {
-            record = existingRecord;
-        }
+		return Record2JsonUtil.toJsonObject(getRecords());
+	}
 
-        for (final Result associatedResult : result.getAssociates()) {
-            buildRecord(rs, associatedResult, context, record);
-        }
-    }
+	/**
+	 * Builds the top level record.
+	 *
+	 * @param rs      the rs
+	 * @param result  the result
+	 * @param context the context
+	 * @throws Json4ormException the json 4 orm exception
+	 */
+	private void buildTopLevelRecord(final ResultSet rs, final Result result, final QueryContext context)
+			throws Json4ormException {
+		Record record = retrieveValues(rs, result, context);
+		if(record == null) {
+			return;
+		}
+		
+		final Record existingRecord = findRecord(record);
+		if (existingRecord == null) {
+			records.add(record);
+		} else {
+			record = existingRecord;
+		}
 
-    /**
-     * Builds the record.
-     *
-     * @param rs      the rs
-     * @param result  the result
-     * @param context the context
-     * @param parent  the parent
-     * @throws Json4ormException the json 4 orm exception
-     */
-    public void buildRecord(final ResultSet rs, final Result result, final QueryContext context, final Record parent)
-            throws Json4ormException {
-        Record record = retrieveValues(rs, result, context);
-        final Record existingRecord = parent.findChildRecord(result.getEntity(), record);
-        if (existingRecord == null) {
-            parent.addAssociateRecord(result.getEntity(), record);
-        } else {
-            record = existingRecord;
-        }
+		for (final Result associatedResult : result.getAssociates()) {
+			buildRecord(rs, associatedResult, context, record);
+		}
+	}
 
-        for (final Result associatedResult : result.getAssociates()) {
-            buildRecord(rs, associatedResult, context, record);
-        }
-    }
+	/**
+	 * Builds the record.
+	 *
+	 * @param rs      the rs
+	 * @param result  the result
+	 * @param context the context
+	 * @param parent  the parent
+	 * @throws Json4ormException the json 4 orm exception
+	 */
+	public void buildRecord(final ResultSet rs, final Result result, final QueryContext context, final Record parent)
+			throws Json4ormException {
+		Record record = retrieveValues(rs, result, context);
+		if(record == null) {
+			return;
+		}
+		final Record existingRecord = parent.findChildRecord(result.getEntity(), record);
+		if (existingRecord == null) {
+			parent.addAssociateRecord(result.getEntity(), record);
+		} else {
+			record = existingRecord;
+		}
 
-    /**
-     * Retrieve values.
-     *
-     * @param rs      the rs
-     * @param result  the result
-     * @param context the context
-     * @return the record
-     * @throws Json4ormException the json 4 orm exception
-     */
-    private Record retrieveValues(final ResultSet rs, final Result result, final QueryContext context)
-            throws Json4ormException {
+		for (final Result associatedResult : result.getAssociates()) {
+			buildRecord(rs, associatedResult, context, record);
+		}
+	}
 
-        final Map<String, Object> values = new LinkedHashMap<>();
+	/**
+	 * Retrieve values.
+	 *
+	 * @param rs      the rs
+	 * @param result  the result
+	 * @param context the context
+	 * @return the record
+	 * @throws Json4ormException the json 4 orm exception
+	 */
+	private Record retrieveValues(final ResultSet rs, final Result result, final QueryContext context)
+			throws Json4ormException {
 
-        final String alias = result.getAlias();
-        final Entity entity = result.getEntityObj();
-        
-        final List<String> properties = result.getProperties();
-        if (properties != null && !properties.isEmpty()) {
-            for (final String property : properties) {
-                final String fieldName = alias + "." + property;
-                final int index = context.getFieldIndex(fieldName);
-                if (index == 0) {
-                    throw new Json4ormException("No field found for: " + fieldName);
-                }
-                try {
-                	Property p = entity.getProperty(property);
-                	if(!PropertyType.isTypeValid(p.getType())) {
-                		//it is object type
-                		Entity propEntity = context.getSchema().getEntity(p.getType());
-                		if(propEntity == null) {
-                			throw new Json4ormException("Invalid property type: " + p.getType());
-                		}
-                		
-                		Property idProp = propEntity.getIdProperty();
-                		
-                		Map<String, Object> entityValue = new HashMap<>();
-                		entityValue.put(idProp.getName(), valueConvertor.convertFromDB(idProp, rs.getObject(index)));
-                		values.put(property, entityValue);
-                	}else {
-                        values.put(property, valueConvertor.convertFromDB(p, rs.getObject(index)));
-                	}
-                } catch (final SQLException e) {
-                    throw new Json4ormException("Failed to retrieve value for: " + fieldName, e);
-                }
-            }
-        }
+		final Map<String, Object> values = new LinkedHashMap<>();
 
-        
-        final Record record = new Record(entity, values);
-        return record;
-    }
+		final String alias = result.getAlias();
+		final Entity entity = result.getEntityObj();
 
-    /**
-     * Find record.
-     *
-     * @param record the record
-     * @return the record
-     */
-    private Record findRecord(final Record record) {
-        for (final Record r : records) {
-            if (r.equalTo(record)) {
-                return r;
-            }
-        }
+		final List<String> properties = result.getProperties();
+		
+		// check if record has none-null values
+		boolean hasNoneNullValue = false;
 
-        return null;
-    }
+		if (properties != null && !properties.isEmpty()) {
+			for (final String property : properties) {
+				final String fieldName = alias + "." + property;
+				final int index = context.getFieldIndex(fieldName);
+				if (index == 0) {
+					throw new Json4ormException("No field found for: " + fieldName);
+				}
+				
+				try {
+					Object fieldValue = rs.getObject(index);
+					if( fieldValue != null ) {
+						hasNoneNullValue = true;
+					}
+					Property p = entity.getProperty(property);
+					if (!PropertyType.isTypeValid(p.getType())) {
+						// it is object type
+						Entity propEntity = context.getSchema().getEntity(p.getType());
+						if (propEntity == null) {
+							throw new Json4ormException("Invalid property type: " + p.getType());
+						}
 
+						Property idProp = propEntity.getIdProperty();
+
+						Map<String, Object> entityValue = new HashMap<>();
+						entityValue.put(idProp.getName(), valueConvertor.convertFromDB(idProp, fieldValue));
+						values.put(property, entityValue);
+					} else {
+						values.put(property, valueConvertor.convertFromDB(p, fieldValue));
+					}
+				} catch (final SQLException e) {
+					throw new Json4ormException("Failed to retrieve value for: " + fieldName, e);
+				}
+			}
+		}
+
+		if (hasNoneNullValue) {
+			final Record record = new Record(entity, values);
+			return record;
+		}
+		
+		return null;
+	}
+
+	/**
+	 * Find record.
+	 *
+	 * @param record the record
+	 * @return the record
+	 */
+	private Record findRecord(final Record record) {
+		for (final Record r : records) {
+			if (r.equalTo(record)) {
+				return r;
+			}
+		}
+
+		return null;
+	}
 
 	public ValueConvertor getValueConvertor() {
 		return valueConvertor;
 	}
 
-
 	public void setValueConvertor(ValueConvertor valueConvertor) {
 		this.valueConvertor = valueConvertor;
 	}
-    
-    
+
 }
