@@ -76,7 +76,7 @@ public class AngularCodeGenerator extends AbstractCodeGenerator {
 	public void generateCreateForm(Entity entity) throws IOException {
 		StringBuffer sbHtml = new StringBuffer();
 		StringBuffer sbForm = new StringBuffer();
-		String formGroupName = entity.getName().toLowerCase() + "FormGroup";
+		String formGroupName = getVarName(entity.getName()) + "FormGroup";
 		sbHtml.append("<div class=\"form-container\">");
 		sbHtml.append(System.lineSeparator());
 
@@ -132,6 +132,9 @@ public class AngularCodeGenerator extends AbstractCodeGenerator {
 		sbForm.append(createSubmitFormFunction(entity));
 		sbForm.append(System.lineSeparator());
 		sbForm.append(System.lineSeparator());
+		sbForm.append(createPopulateFormFunction(entity));
+		sbForm.append(System.lineSeparator());
+		sbForm.append(System.lineSeparator());
 		sbForm.append(createProcessDataFunction(entity));
 		sbForm.append(System.lineSeparator());
 		sbForm.append(System.lineSeparator());
@@ -151,18 +154,24 @@ public class AngularCodeGenerator extends AbstractCodeGenerator {
 
 	}
 
+	private String getVarName(String name) {
+		return name.substring(0,1).toLowerCase()+name.substring(1);
+	}
 	private String createSubmitFormFunction(Entity entity) {
 		StringBuffer sb = new StringBuffer();
 		sb.append(TAB + "submitForm() {");
 		sb.append(System.lineSeparator());
-		String varName = entity.getName().toLowerCase();
+		String varName = getVarName(entity.getName());
+		
 		sb.append(TAB + "let " + varName + " = <" + entity.getName() + ">{}");
 		sb.append(System.lineSeparator());
 		for (Property p : entity.getProperties()) {
-			if (PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())
-					|| PropertyType.PTY_ID.equalsIgnoreCase(p.getType())) {
+			String inputType = getInputType(p);
+			if (StringUtils.isBlank(inputType)) {
 				continue;
 			}
+			
+			
 			sb.append(TAB + varName + "." + p.getName() + " = this." + varName + "FormGroup.get('" + p.getName()
 					+ "').value;");
 			sb.append(System.lineSeparator());
@@ -170,6 +179,28 @@ public class AngularCodeGenerator extends AbstractCodeGenerator {
 		sb.append(System.lineSeparator());
 		sb.append(TAB + "this." + varName + "Service.add" + entity.getName() + "(" + varName
 				+ ").subscribe((data: QueryResponse<" + entity.getName() + ">) => this.processData(data));");
+		sb.append(System.lineSeparator());
+		sb.append(TAB + "}");
+
+		return sb.toString();
+	}
+	private String createPopulateFormFunction(Entity entity) {
+		String varName = getVarName(entity.getName());
+		StringBuffer sb = new StringBuffer();
+		sb.append(TAB + "populateForm(" + varName +":"+entity.getName()+") {");
+		sb.append(System.lineSeparator());
+		for (Property p : entity.getProperties()) {
+			String inputType = getInputType(p);
+			if (StringUtils.isBlank(inputType)) {
+				continue;
+			}
+
+			sb.append(TAB + "this." + varName + "FormGroup.get('" + p.getName()
+			+ "').setValue(" + varName + "." + p.getName() + ");");
+			sb.append(System.lineSeparator());
+		}
+		sb.append(System.lineSeparator());
+		
 		sb.append(System.lineSeparator());
 		sb.append(TAB + "}");
 

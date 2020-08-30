@@ -24,6 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.schema.Property;
@@ -209,6 +211,11 @@ public class ValueConvertorImpl implements ValueConvertor {
 	 * @return the time
 	 */
 	private Time convertToTime(final Object value) {
+		final String s = value.toString();
+		if(StringUtils.isBlank(s)) {
+			return null;
+		}
+		
 		return Time.valueOf(value.toString());
 	}
 
