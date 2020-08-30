@@ -16,6 +16,7 @@
 package com.json4orm.engine.impl;
 
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.ParseException;
@@ -309,6 +310,16 @@ public class ValueConvertorImpl implements ValueConvertor {
 		} else if (value instanceof Timestamp) {
 			Timestamp d = (Timestamp) value;
 			return DATETIME_FORMATTER.format(d);
+		} else if (value instanceof oracle.sql.TIMESTAMP) {
+			oracle.sql.TIMESTAMP d = (oracle.sql.TIMESTAMP) value;
+			Timestamp timestamp = null;
+			try {
+				timestamp = d.timestampValue();
+			} catch (SQLException e) {
+				throw new Json4ormException(e);
+			}
+			return DATETIME_FORMATTER.format(timestamp);
+
 		} else {
 			throw new Json4ormException("Could not convert to datetime: " + value.getClass().getCanonicalName());
 		}
