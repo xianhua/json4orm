@@ -45,17 +45,18 @@
 		<powermock.version>1.7.4</powermock.version>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<log4j2.version>2.15.0</log4j2.version>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.12.1</version>
+			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.13.2</version>
+			<version>${log4j2.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
