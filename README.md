@@ -137,6 +137,4 @@ ClassStudent
     }  
   }
 }
-```
-## User Guide and API Guide
-Please visit http://json4orm.com for user guide and API guide.
+
