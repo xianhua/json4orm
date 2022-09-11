@@ -1,0 +1,22 @@
+{
+  name: "EntityWithInvalidProperties",
+  table: "table",
+  properties: [
+    {
+      name: "id",
+      type: "ID",
+      column: "id"
+    },
+    {
+      name: "invalid.name",
+      type: "InvalidType",
+      column: "",
+      columns: []
+    },
+    {
+      name: "name",
+      type: "string",
+      column: "name"
+    }
+  ]
+}

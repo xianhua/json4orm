@@ -13,22 +13,17 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.json4orm.factory;
-
-import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.schema.Schema;
+package com.json4orm.web;
 
 /**
- * A factory for creating Schema objects.
+ * The enum Status.
+ *
+ * @author Xianhua Liu
  */
-public interface SchemaFactory {
+public enum Status {
+    
+    /** The Constant STATUS_SUCCESS. */
+    SUCCESS,
+    FAIL
 
-    /**
-     * Creates a new Schema object.
-     *
-     * @return the schema
-     * @throws Json4ormException when the schema failed the validation, such invalid
-     *                           or missing properties and entities
-     */
-    public Schema createSchema() throws Json4ormException;
 }

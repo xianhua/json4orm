@@ -1,0 +1,6 @@
+{
+  name: "EntityWithNoProperties",
+  table: "table",
+  properties: [
+  ]
+}

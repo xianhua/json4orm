@@ -36,7 +36,9 @@ import com.json4orm.model.query.Query;
 import com.json4orm.model.query.Result;
 import com.json4orm.model.query.SortBy;
 import com.json4orm.model.schema.Entity;
+import com.json4orm.model.schema.IdGenerator;
 import com.json4orm.model.schema.Property;
+import com.json4orm.model.schema.PropertyType;
 import com.json4orm.model.schema.Schema;
 import com.json4orm.util.Constants;
 import com.json4orm.util.EngineUtil;
@@ -47,7 +49,6 @@ import com.json4orm.util.EngineUtil;
  * @author Xianhua Liu
  */
 public class QueryBuilderImpl implements QueryBuilder {
-
 	private DatabaseDriver databaseDriver = DatabaseDriver.H2;
 	/** The query. */
 	private Query query;
@@ -125,7 +126,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 		return databaseDriver;
 	}
 
-	public void setDatabaseDriver(DatabaseDriver databaseDriver) {
+	public void setDatabaseDriver(final DatabaseDriver databaseDriver) {
 		this.databaseDriver = databaseDriver;
 	}
 
@@ -167,17 +168,33 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 	@Override
 	public QueryContext build(final Query query) throws Json4ormException {
+		this.query = query;
+		switch (query.getAction()) {
+		case SEARCH:
+			return buildSearch(query);
+		case ADD:
+		case UPDATE:
+		case ADD_OR_UPDATE:
+			return buildAddOrUpdate(query);
+		case DELETE:
+			return buildDelete(query);
+		default:
+			throw new Json4ormException("Not supported action: " + query.getAction());
+		}
+	}
+
+	public QueryContext buildSearch(final Query query) throws Json4ormException {
 		// add default pagination if not set
 		if (query.getPagination() == null) {
-			Pagination pagination = new Pagination();
+			final Pagination pagination = new Pagination();
 			pagination.setOffset(0);
 			pagination.setLimit(25);
 			query.setPagination(pagination);
 		}
 		EngineUtil.resetAliasPlaceHolderCounts();
 		this.query = query;
-		baseEntity = query.getQueryFor();
-		final String baseAlias = EngineUtil.getAlias(query.getQueryFor());
+		baseEntity = query.getEntityName();
+		final String baseAlias = EngineUtil.getAlias(baseEntity);
 		aliasMapForFilter.put(baseEntity, baseAlias);
 		aliasMapForResult.put(baseEntity, baseAlias);
 
@@ -251,7 +268,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 	public QueryContext getQueryContext() throws Json4ormException {
 		final QueryContext queryContext = new QueryContext();
 
-		queryContext.setSql(getQuery());
+		queryContext.setSearchSql(getQuery());
 		queryContext.setCountSql(getCountQuery());
 		queryContext.setLimitSql(getLimitQuery());
 		queryContext.setValues(values);
@@ -270,7 +287,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 		final StringBuffer buf = new StringBuffer(100);
 		buf.append("SELECT " + StringUtils.join(selectedColumns, ",") + " FROM ");
 		buf.append(String.join(" ", fromTablesForResult));
-		
+
 		if (query.getPagination() != null) {
 			if (whereForResult.length() > 0) {
 				buf.append(" AND ");
@@ -324,7 +341,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 
 		if (query.getPagination() != null) {
 			if (DatabaseDriver.ORACLE == this.databaseDriver) {
-				long maxrownum = query.getPagination().getOffset() + query.getPagination().getLimit();
+				final long maxrownum = query.getPagination().getOffset() + query.getPagination().getLimit();
 				buf.append(" ) temp1 WHERE rownum <= " + maxrownum + ") temp2 " + "WHERE  rnum > "
 						+ query.getPagination().getOffset());
 			} else {
@@ -383,90 +400,69 @@ public class QueryBuilderImpl implements QueryBuilder {
 	 * @throws Json4ormException the json 4 orm exception
 	 */
 	/*
-	private void visit(final Result result, final String entityChain) throws Json4ormException {
-		String entity = result.getEntity();
-
-		if (entity == null) {
-			entity = baseEntity;
-		} else {
-			if (!entity.equalsIgnoreCase(baseEntity)) {
-				entity = entityChain + "." + entity;
-			}
-		}
-
-		final Entity entityObj = schema.findEntity(entity);
-		if (entityObj == null) {
-			throw new Json4ormException("No entity defined for: " + entity);
-		}
-		result.setEntityObj(entityObj);
-
-		final String alias = getOrCreateAlias(entity, aliasMapForResult);
-		result.setAlias(alias);
-
-		for (final String s : result.getProperties()) {
-			final Property p = entityObj.getProperty(s);
-			if (p == null) {
-				throw new Json4ormException("No property defined for: " + entity + "." + s);
-			}
-			selectedColumns.add(alias + "." + p.getColumn());
-			selectedProperties.add(alias + "." + p.getName());
-		}
-
-		// add PK if missing
-		final Property idProperty = entityObj.getIdProperty();
-		if (idProperty != null) {
-			if (StringUtils.isNotBlank(idProperty.getColumn())) {
-				final String idField = alias + "." + idProperty.getColumn();
-				if (!selectedColumns.contains(idField)) {
-					selectedColumns.add(idField);
-					final Property p = entityObj.getPropertyByColumn(idProperty.getColumn());
-					selectedProperties.add(alias + "." + p.getName());
-					result.addProperty(p.getName());
-				}
-			} else if (!EngineUtil.isEmpty(idProperty.getColumns())) {
-				for (final String idColumn : idProperty.getColumns()) {
-					final String idField = alias + "." + idColumn;
-					if (!selectedColumns.contains(idField)) {
-						selectedColumns.add(idField);
-						final Property p = entityObj.getPropertyByColumn(idColumn);
-						selectedProperties.add(alias + "." + p.getName());
-						result.addProperty(p.getName());
-					}
-				}
-			}
-		}
-
-		if (result.getAssociates() != null && result.getAssociates().size() > 0) {
-			for (final Result assocResult : result.getAssociates()) {
-				visit(assocResult, entity);
-			}
-		}
-
-	}
-    */
+	 * private void visit(final Result result, final String entityChain) throws
+	 * Json4ormException { String entity = result.getEntity();
+	 * 
+	 * if (entity == null) { entity = baseEntity; } else { if
+	 * (!entity.equalsIgnoreCase(baseEntity)) { entity = entityChain + "." + entity;
+	 * } }
+	 * 
+	 * final Entity entityObj = schema.findEntity(entity); if (entityObj == null) {
+	 * throw new Json4ormException("No entity defined for: " + entity); }
+	 * result.setEntityObj(entityObj);
+	 * 
+	 * final String alias = getOrCreateAlias(entity, aliasMapForResult);
+	 * result.setAlias(alias);
+	 * 
+	 * for (final String s : result.getProperties()) { final Property p =
+	 * entityObj.getProperty(s); if (p == null) { throw new
+	 * Json4ormException("No property defined for: " + entity + "." + s); }
+	 * selectedColumns.add(alias + "." + p.getColumn());
+	 * selectedProperties.add(alias + "." + p.getName()); }
+	 * 
+	 * // add PK if missing final Property idProperty = entityObj.getIdProperty();
+	 * if (idProperty != null) { if (StringUtils.isNotBlank(idProperty.getColumn()))
+	 * { final String idField = alias + "." + idProperty.getColumn(); if
+	 * (!selectedColumns.contains(idField)) { selectedColumns.add(idField); final
+	 * Property p = entityObj.getPropertyByColumn(idProperty.getColumn());
+	 * selectedProperties.add(alias + "." + p.getName());
+	 * result.addProperty(p.getName()); } } else if
+	 * (!EngineUtil.isEmpty(idProperty.getColumns())) { for (final String idColumn :
+	 * idProperty.getColumns()) { final String idField = alias + "." + idColumn; if
+	 * (!selectedColumns.contains(idField)) { selectedColumns.add(idField); final
+	 * Property p = entityObj.getPropertyByColumn(idColumn);
+	 * selectedProperties.add(alias + "." + p.getName());
+	 * result.addProperty(p.getName()); } } } }
+	 * 
+	 * if (result.getAssociates() != null && result.getAssociates().size() > 0) {
+	 * for (final Result assocResult : result.getAssociates()) { visit(assocResult,
+	 * entity); } }
+	 * 
+	 * }
+	 */
 	private void visit(final Result result, final Result parent) throws Json4ormException {
 		String entity = result.getEntity();
 
 		if (entity == null) {
 			entity = baseEntity;
 		}
-		
-	    Entity entityObj = schema.findEntity(entity);
+
+		Entity entityObj = schema.findEntity(entity);
 		if (entityObj == null) {
-			if(parent!=null) {
-				Property property = parent.getEntityObj().getProperty(entity);
-				if(property != null ) {
+			if (parent != null) {
+				final Property property = parent.getEntityObj().getProperty(entity);
+				if (property != null) {
 					entityObj = schema.findEntity(property.getEntityType());
 					if (entityObj == null) {
 						entityObj = schema.findEntity(property.getItemType());
 					}
 				}
 			}
-			
-			if(entityObj ==null) {
+
+			if (entityObj == null) {
 				throw new Json4ormException("No entity defined for: " + entity);
 			}
-			
+
 		}
 		result.setEntityObj(entityObj);
 
@@ -474,12 +470,23 @@ public class QueryBuilderImpl implements QueryBuilder {
 		result.setAlias(alias);
 
 		for (final String s : result.getProperties()) {
-			final Property p = entityObj.getProperty(s);
-			if (p == null) {
-				throw new Json4ormException("No property defined for: " + entity + "." + s);
+			if (Constants.ALL_PROPERTIES.equals(s)) {
+				List<String> allProperties = new ArrayList<>();
+				for (final Property p : entityObj.getOwnedPropeties()) {
+					selectedColumns.add(alias + "." + p.getColumn());
+					selectedProperties.add(alias + "." + p.getName());
+					allProperties.add(p.getName());
+				}
+				result.setProperties(allProperties);
+				break;
+			} else {
+				final Property p = entityObj.getProperty(s);
+				if (p == null) {
+					throw new Json4ormException("No property defined for: " + entity + "." + s);
+				}
+				selectedColumns.add(alias + "." + p.getColumn());
+				selectedProperties.add(alias + "." + p.getName());
 			}
-			selectedColumns.add(alias + "." + p.getColumn());
-			selectedProperties.add(alias + "." + p.getName());
 		}
 
 		// add PK if missing
@@ -506,13 +513,13 @@ public class QueryBuilderImpl implements QueryBuilder {
 			}
 		}
 
-		if(parent != null) {
-			//add left join
+		if (parent != null) {
+			// add left join
 			fromTablesForResult.add(createJoins(parent.getEntityObj(), entityObj, "LEFT JOIN"));
-		}else {
-			fromTablesForResult.add(entityObj.getTable()+" " + alias);
+		} else {
+			fromTablesForResult.add(entityObj.getTable() + " " + alias);
 		}
-		
+
 		if (result.getAssociates() != null && result.getAssociates().size() > 0) {
 			for (final Result assocResult : result.getAssociates()) {
 				visit(assocResult, result);
@@ -588,13 +595,13 @@ public class QueryBuilderImpl implements QueryBuilder {
 			final String column = property.getColumn();
 			if (FilterOperator.EQUAL.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " = ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
 				whereForFilter.append("LOWER(" + alias + "." + column + ") = ?");
 				values.add(((String) filter.getValue()).toLowerCase());
 			} else if (FilterOperator.NOT_EQUAL.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " != ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.NOT_EQUAL_CASE_INSENSITIVE.equalsIgnoreCase(operator)) {
 				whereForFilter.append("LOWER(" + alias + "." + column + ") != ?");
 				values.add(((String) filter.getValue()).toLowerCase());
@@ -636,16 +643,16 @@ public class QueryBuilderImpl implements QueryBuilder {
 				values.add(((String) filter.getValue()).toLowerCase() + "%");
 			} else if (FilterOperator.GREATER_THAN.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " > ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.LESS_THAN.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " < ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.NOT_GREATER_THAN.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " = <= ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.NOT_LESS_THAN.equalsIgnoreCase(operator)) {
 				whereForFilter.append(alias + "." + column + " >= ?");
-				values.add(convertor.convert(property, filter.getValue()));
+				values.add(convertor.convertToDB(property, filter.getValue()));
 			} else if (FilterOperator.IN.equalsIgnoreCase(operator)) {
 				handleFilterWithListValues(whereForFilter, values, alias, property, "IN", filter.getValue());
 			} else if (FilterOperator.NOT_IN.equalsIgnoreCase(operator)) {
@@ -678,11 +685,11 @@ public class QueryBuilderImpl implements QueryBuilder {
 			throw new Json4ormException("At least one value is expected in the list for operator: IN");
 		}
 		buf.append(alias + "." + property.getColumn() + " " + operator + "(?");
-		values.add(convertor.convert(property, list.get(0)));
+		values.add(convertor.convertToDB(property, list.get(0)));
 
 		for (int i = 1; i < list.size(); i++) {
 			buf.append(",?");
-			values.add(convertor.convert(property, list.get(i)));
+			values.add(convertor.convertToDB(property, list.get(i)));
 		}
 
 		buf.append(")");
@@ -797,21 +804,179 @@ public class QueryBuilderImpl implements QueryBuilder {
 		where.append(" " + fromAlias + "." + fromColumn + " = " + toAlias + "." + toColumn + " ");
 	}
 
-	private String createJoins(final Entity fromEntity, final Entity toEntity, final String joinType) throws Json4ormException {
+	private String createJoins(final Entity fromEntity, final Entity toEntity, final String joinType)
+			throws Json4ormException {
 		final String fromAlias = getOrCreateAlias(fromEntity, aliasMapForResult);
 		final String toAlias = getOrCreateAlias(toEntity, aliasMapForResult);
 
 		String fromColumn = fromEntity.findLinkedColumn(toEntity);
-		if(fromColumn==null) {
+		if (fromColumn == null) {
 			fromColumn = fromEntity.getIdProperty().getColumn();
 		}
 		String toColumn = toEntity.findLinkedColumn(fromEntity);
-		if(toColumn==null) {
+		if (toColumn == null) {
 			toColumn = toEntity.getIdProperty().getColumn();
 		}
 
-		return joinType + " " + toEntity.getTable() + " " + toAlias + " ON " + fromAlias + "." + fromColumn + " = " + toAlias + "." + toColumn;
+		return joinType + " " + toEntity.getTable() + " " + toAlias + " ON " + fromAlias + "." + fromColumn + " = "
+				+ toAlias + "." + toColumn;
 	}
-	
-	
+
+	public QueryContext buildAddOrUpdate(final Query query) throws Json4ormException {
+		return buildAddOrUpdateContext(query.getEntityName(), query.getData(), null);
+	}
+
+	private QueryContext buildAddOrUpdateContext(final String entityName, List<Map<String, Object>> data,
+			Map<String, Object> parentRecord) throws Json4ormException {
+		final QueryContext context = new QueryContext();
+		context.setQuery(query);
+		context.setParentRecord(parentRecord);
+
+		final Entity entity = schema.findEntity(entityName);
+		if (entity == null) {
+			throw new Json4ormException("No entity found for name: " + entityName);
+		}
+		context.setEntity(entity);
+		final Property idProperty = entity.getIdProperty();
+		if (idProperty == null) {
+			throw new Json4ormException("No ID property defined for entity: " + entity.getName());
+		}
+
+		final StringBuffer sb = new StringBuffer();
+
+		final List<Property> properties = new ArrayList<>();
+		final List<String> fields = new ArrayList<>();
+		final List<String> valuePlaceHolders = new ArrayList<>();
+		final List<String> setters = new ArrayList<>();
+
+		for (final Property p : entity.getProperties()) {
+			if (p.getType().equalsIgnoreCase(PropertyType.PTY_ID)) {
+				if (p.getIdGenerator() != null && !IdGenerator.AUTO.equalsIgnoreCase(p.getIdGenerator())) {
+					properties.add(p);
+				}
+			} else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+				properties.add(p);
+			}
+		}
+
+		for (final Property p : properties) {
+			fields.add(p.getColumn());
+			valuePlaceHolders.add("?");
+			if (!p.getType().equalsIgnoreCase(PropertyType.PTY_ID)) {
+				setters.add(p.getColumn() + "=?");
+			}
+		}
+		sb.append("INSERT INTO ");
+		sb.append(entity.getTable());
+		sb.append(" ( ");
+		sb.append(StringUtils.join(fields, ","));
+		sb.append(" ) values (");
+		sb.append(StringUtils.join(valuePlaceHolders, ","));
+		sb.append(" )");
+
+		if (DatabaseDriver.POSTGRESQL.equals(databaseDriver)) {
+			sb.append("RETURNING " + idProperty.getColumn());
+		}
+
+		context.setInsertSql(sb.toString());
+
+		sb.delete(0, sb.length());
+		sb.append("UPDATE ");
+		sb.append(entity.getTable());
+		sb.append(" SET " + StringUtils.join(setters, ","));
+		sb.append(" WHERE ");
+		sb.append(idProperty.getColumn());
+		sb.append(" = ?");
+
+		context.setUpdateSql(sb.toString());
+
+		for (final Map<String, Object> valueMap : data) {
+			final List<Object> record = new ArrayList<>();
+			final Object primaryKey = convertor.convertToDB(idProperty, valueMap.get(idProperty.getName()));
+
+			for (final Property p : properties) {
+				final Object o = valueMap.get(p.getName());
+
+				if (PropertyType.isTypeValid(p.getType()) && !PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+					record.add(convertor.convertToDB(p, o));
+				} else if (!PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+
+					if (o != null && o instanceof Map) {
+						final Entity associatedEntity = schema.getEntity(p.getType());
+						if (associatedEntity == null) {
+							throw new Json4ormException("No Entity found for name: " + p.getType());
+						}
+
+						final Property idp = associatedEntity.getIdProperty();
+						if (idp == null) {
+							throw new Json4ormException("No ID property defined for entity: " + p.getType());
+						}
+
+						final Map<String, Object> associatedEntityValues = (Map<String, Object>) o;
+						if (associatedEntityValues.get(idp.getName()) == null) {
+							throw new Json4ormException(
+									"No ID value defined for entity: " + p.getName() + " in " + entity.getName());
+						}
+						record.add(convertor.convertToDB(idp, associatedEntityValues.get(idp.getName())));
+					} else {
+						// associate not defined, should get from parent
+						record.add(Constants.PLACEHOLDER_PARENT_ID+p.getType());
+					}
+				} else if (PropertyType.PTY_LIST.equalsIgnoreCase(p.getType())) {
+					// create children context
+					if (o instanceof List) {
+						List<Map<String, Object>> childrenRecords = (List<Map<String, Object>>) o;
+						context.addChildren(buildAddOrUpdateContext(p.getItemType(), childrenRecords, valueMap));
+					}
+				}
+			}
+
+			if (primaryKey == null) {
+				context.addInsertRecord(record);
+				context.addInsertData(valueMap);
+			} else {
+				record.add(primaryKey);
+				context.addUpdateRecord(record);
+				context.addUpdateData(valueMap);
+			}
+		}
+
+		return context;
+	}
+
+	public QueryContext buildDelete(final Query query) throws Json4ormException {
+		if (query == null) {
+			throw new Json4ormException("Null query");
+		}
+
+		if (query.getId() == null) {
+			throw new Json4ormException("No id found for delete query.");
+		}
+
+		final QueryContext context = new QueryContext();
+		context.setQuery(query);
+
+		final Entity entity = schema.findEntity(query.getEntityName());
+		if (entity == null) {
+			throw new Json4ormException("No entity found for name: " + query.getEntityName());
+		}
+		context.setEntity(entity);
+		final Property idProperty = entity.getIdProperty();
+		if (idProperty == null) {
+			throw new Json4ormException("No ID property defined for entity: " + entity.getName());
+		}
+
+		final StringBuffer sb = new StringBuffer();
+		sb.append("DELETE FROM ");
+		sb.append(entity.getTable());
+		sb.append(" WHERE ");
+		sb.append(idProperty.getColumn());
+		sb.append("=?");
+
+		context.setDeleteSql(sb.toString());
+		context.setId(convertor.convertToDB(idProperty, query.getId()));
+
+		return context;
+	}
+
 }

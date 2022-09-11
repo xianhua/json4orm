@@ -13,22 +13,24 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.json4orm.factory;
+package com.json4orm.db;
 
 import com.json4orm.exception.Json4ormException;
-import com.json4orm.model.schema.Schema;
+import com.json4orm.model.query.Query;
 
 /**
- * A factory for creating Schema objects.
+ * The Interface QueryExecutor defines function to execute query.
+ *
+ * @author Xianhua Liu
  */
-public interface SchemaFactory {
+public interface QueryExecutor {
 
     /**
-     * Creates a new Schema object.
+     * Execute search query.
      *
-     * @return the schema
-     * @throws Json4ormException when the schema failed the validation, such invalid
-     *                           or missing properties and entities
+     * @param query the query
+     * @return the query result
+     * @throws Json4ormException the json 4 orm exception
      */
-    public Schema createSchema() throws Json4ormException;
+    public QueryResult execute(final Query query) throws Json4ormException;
 }
