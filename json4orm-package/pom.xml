@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.json4orm</groupId>
 	<artifactId>json4orm-package</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.2</version>
 	<dependencies>
 	</dependencies>
 
