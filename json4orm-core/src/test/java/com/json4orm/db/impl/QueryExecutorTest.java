@@ -14,6 +14,7 @@ import org.junit.Test;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json4orm.db.QueryResult;
+import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.factory.impl.FileSystemSchemaFactory;
 import com.json4orm.model.query.Action;
@@ -38,6 +39,7 @@ public class QueryExecutorTest {
         final FileSystemSchemaFactory schemaFactory = new FileSystemSchemaFactory(folder);
         final Schema schema = schemaFactory.createSchema();
         executor.setSchema(schema);
+        executor.setValueConvertor(new ValueConvertorImpl());
 
         final InputStream in = this.getClass().getClassLoader().getResourceAsStream("query/student-query.json");
         final QueryParser parser = new QueryParser();
@@ -62,6 +64,7 @@ public class QueryExecutorTest {
         executor.setDbUser("");
         executor.setDbPassword("");
         executor.setDbUrl("jdbc:h2:mem:test;MODE=MySQL;DB_CLOSE_ON_EXIT=TRUE;TRACE_LEVEL_SYSTEM_OUT=1;INIT=runscript from 'src/test/resources/scripts/test.sql'");
+        executor.setValueConvertor(new ValueConvertorImpl());
         
         // create schema by reading json mapping files from entities folder
         final URL url = this.getClass().getClassLoader().getResource("entities");

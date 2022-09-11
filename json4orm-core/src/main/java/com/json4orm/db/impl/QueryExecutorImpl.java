@@ -33,7 +33,6 @@ import com.json4orm.db.QueryResult;
 import com.json4orm.engine.QueryContext;
 import com.json4orm.engine.ValueConvertor;
 import com.json4orm.engine.impl.QueryBuilderImpl;
-import com.json4orm.engine.impl.ValueConvertorImpl;
 import com.json4orm.exception.Json4ormException;
 import com.json4orm.model.query.Query;
 import com.json4orm.model.schema.Entity;
