@@ -63,6 +63,11 @@ public class Property {
     /** The item type. */
     private String itemType;
 
+    private String idGenerator;
+    
+    private String sequenceName;
+    
+    private boolean required = false;
     /**
      * Gets the name.
      *
@@ -166,4 +171,29 @@ public class Property {
         this.columns = columns;
     }
 
+    public String getIdGenerator() {
+        return idGenerator;
+    }
+
+    public void setIdGenerator(final String idGenerator) {
+        this.idGenerator = idGenerator;
+    }
+
+    public String getSequenceName() {
+        return sequenceName;
+    }
+
+    public void setSequenceName(final String sequenceName) {
+        this.sequenceName = sequenceName;
+    }
+
+	public boolean isRequired() {
+		return required;
+	}
+
+	public void setRequired(boolean required) {
+		this.required = required;
+	}
+
+    
 }

@@ -15,9 +15,13 @@
  */
 package com.json4orm.engine;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import com.json4orm.model.query.Action;
 import com.json4orm.model.query.Query;
+import com.json4orm.model.schema.Entity;
 import com.json4orm.model.schema.Schema;
 
 /**
@@ -28,8 +32,11 @@ import com.json4orm.model.schema.Schema;
  */
 public class QueryContext {
 
+    /** The entity. */
+    private Entity entity;
+    
     /** The sql string for querying records. */
-    private String sql;
+    private String searchSql;
 
     /** The sql string for querying total count. */
     private String countSql;
@@ -37,6 +44,15 @@ public class QueryContext {
     /** The sql string for querying records within the range defined by offset and limit. */
     private String limitSql;
 
+    /** The insert sql. */
+    private String insertSql;
+    
+    /** The update sql. */
+    private String updateSql;
+    
+    /** The delete sql. */
+    private String deleteSql;
+    
     /** The values as querying statement parameters. */
     private List<Object> values;
 
@@ -49,22 +65,39 @@ public class QueryContext {
     /** The schema contains all entities. */
     private Schema schema;
 
+    /** The insert records. */
+    private final List<List<Object>> insertRecords = new ArrayList<>();
+    
+    /** The update records. */
+    private final List<List<Object>> updateRecords = new ArrayList<>();
+    
+    private final List<Map<String, Object>> insertData = new ArrayList<>();
+    
+    /** The update records. */
+    private final List<Map<String, Object>> updateData = new ArrayList<>();
+    
+    /** The id. */
+    private Object id;
+    
+    List<QueryContext> children = new ArrayList<>(); 
+    Map<String, Object> parentRecord;
+    
     /**
      * Gets the SQL string for querying data.
      *
-     * @return the sql string for querying data
+     * @return the search sql string for querying data
      */
-    public String getSql() {
-        return sql;
+    public String getSearchSql() {
+        return searchSql;
     }
 
     /**
-     * Sets the sql.
+     * Sets the search Sql.
      *
-     * @param sql the new sql
+     * @param searchSql the new searchSql
      */
-    public void setSql(final String sql) {
-        this.sql = sql;
+    public void setSearchSql(final String searchSql) {
+        this.searchSql = searchSql;
     }
 
     /**
@@ -189,4 +222,100 @@ public class QueryContext {
     public void setSchema(final Schema schema) {
         this.schema = schema;
     }
+
+    public Entity getEntity() {
+        return entity;
+    }
+
+    public void setEntity(final Entity entity) {
+        this.entity = entity;
+    }
+
+    public String getInsertSql() {
+        return insertSql;
+    }
+
+    public void setInsertSql(final String insertSql) {
+        this.insertSql = insertSql;
+    }
+
+    public String getUpdateSql() {
+        return updateSql;
+    }
+
+    public void setUpdateSql(final String updateSql) {
+        this.updateSql = updateSql;
+    }
+
+    public String getDeleteSql() {
+        return deleteSql;
+    }
+
+    public void setDeleteSql(final String deleteSql) {
+        this.deleteSql = deleteSql;
+    }
+
+    public Object getId() {
+        return id;
+    }
+
+    public void setId(final Object object) {
+        this.id = object;
+    }
+
+    public List<List<Object>> getInsertRecords() {
+        return insertRecords;
+    }
+
+    public List<List<Object>> getUpdateRecords() {
+        return updateRecords;
+    }
+    
+    public void addInsertRecord(final List<Object> record) {
+        this.insertRecords.add(record);
+    }
+    
+    public void addUpdateRecord(final List<Object> record) {
+        this.updateRecords.add(record);
+    }
+    
+    public void addInsertData(final Map<String, Object> record) {
+        this.insertData.add(record);
+    }
+    
+    public void addUpdateData(final Map<String, Object> record) {
+        this.updateData.add(record);
+    }
+    
+    public Action getAction() {
+        return query.getAction();
+    }
+
+	public List<Map<String, Object>> getInsertData() {
+		return insertData;
+	}
+
+	public List<Map<String, Object>> getUpdateData() {
+		return updateData;
+	}
+
+	public List<QueryContext> getChildren() {
+		return children;
+	}
+
+	public void setChildren(List<QueryContext> children) {
+		this.children = children;
+	}
+    
+    public void addChildren(QueryContext context) {
+    	this.children.add(context);
+    }
+
+	public Map<String, Object> getParentRecord() {
+		return parentRecord;
+	}
+
+	public void setParentRecord(Map<String, Object> parentRecord) {
+		this.parentRecord = parentRecord;
+	}
 }

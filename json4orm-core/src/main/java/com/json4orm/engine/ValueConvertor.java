@@ -25,7 +25,7 @@ import com.json4orm.model.schema.Property;
 public interface ValueConvertor {
 
     /**
-     * Converts value for property based on the property type.
+     * Converts value for property based on the property type for database operation.
      *
      * @param property the property to convert value for
      * @param value    the value
@@ -33,5 +33,17 @@ public interface ValueConvertor {
      * @throws Json4ormException when the value is invalid or the type of the
      *                           property is invalid
      */
-    Object convert(Property property, Object value) throws Json4ormException;
+    Object convertToDB(Property property, Object value) throws Json4ormException;
+    
+    
+    /**
+     * Convert from DB type to JSON type.
+     *
+     * @param property the property
+     * @param value the value
+     * @return the object
+     * @throws Json4ormException the json 4 orm exception
+     */
+    Object convertFromDB(Property property, Object value) throws Json4ormException;
+    Object convertFromDB(String type, Object value) throws Json4ormException;
 }

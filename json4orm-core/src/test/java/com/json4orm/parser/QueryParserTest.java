@@ -29,8 +29,6 @@ public class QueryParserTest {
 
         try {
             final Query q = parser.parse(in);
-
-            System.out.println(q.getQueryFor());
             printResult(q.getResult());
         } finally {
             if (in != null) {

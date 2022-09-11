@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.json4orm.db.QueryExecutor;
 import com.json4orm.db.QueryResult;
 import com.json4orm.exception.Json4ormException;
+import com.json4orm.model.query.Action;
 import com.json4orm.model.query.Pagination;
 import com.json4orm.model.query.Query;
 import com.json4orm.parser.QueryParser;
@@ -69,28 +70,32 @@ public class Json4ormController {
     }
 
     /**
-     * Execute query with normalized format.
+     * Execute normalized.
      *
-     * @param query the query in normalized format
+     * @param request the request
      * @return the response entity
-     * @throws Json4ormException when query is invalid or failure occurs during
-     *                           database query
+     * @throws Json4ormException the json 4 orm exception
      */
     @PostMapping(path = "/json4orm/normalized", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<Response> executeNormalized(@RequestBody final Query query) throws Json4ormException {
+    public ResponseEntity<Response> executeNormalized(@RequestBody final Query query)
+            throws Json4ormException {
         return executeQuery(query);
     }
 
     private ResponseEntity<Response> executeQuery(final Query query) throws Json4ormException {
-        LOG.debug("Query for: " + query.getQueryFor());
+        LOG.debug("Executing " + query.getAction() + " for " + query.getEntityName());
         final QueryResult result = queryExecutor.execute(query);
         final QueryResponse<Map<String, Object>> response = new QueryResponse<>();
-        response.setStatus(Constants.STATUS_SUCCESS);
-        response.setResults(result.getRecords());
-        final Pagination pagination = query.getPagination();
-        pagination.setCount(result.getRecords().size());
-        pagination.setTotal(result.getTotal());
-        response.setPagination(pagination);
+        response.setStatus(Status.SUCCESS);
+        final Action action = query.getAction();
+        if(action == Action.SEARCH) {
+            response.setResults(result.getRecords());
+            final Pagination pagination = query.getPagination();
+            pagination.setCount(result.getRecords().size());
+            pagination.setTotal(result.getTotal());
+            response.setPagination(pagination);
+        }
+       
         return new ResponseEntity<Response>(response, HttpStatus.OK);
     }
 }
